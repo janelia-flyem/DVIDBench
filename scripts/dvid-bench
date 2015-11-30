@@ -3,12 +3,22 @@
 import argparse
 import os
 import dvidbench
+from dvidbench import benchmark
 
 parser = argparse.ArgumentParser(description='Benchmark a DVID server')
 parser.add_argument('-s', '--server', required=True, help='DVID server url')
 parser.add_argument('-v', '--version', action="version", version=dvidbench.__version__ )
 cl_args = vars(parser.parse_args())
 
-print "run the benchmarking code now: " + dvidbench.__version__
 
-print dvidbench.__path__
+# okay, we have the command line arguments
+# look to see if the settings file exists.
+# open it if it does.
+# contact the configured server and make sure it is alive
+# create a repo and upload tiles if required
+# otherwise use the existing repo and start the benchmarking
+print "run the benchmarking code now: " + dvidbench.__version__
+# go through the users in steps of 50 from 1 -> 500
+# save the results to disk / sqlite database?
+# parse the results and provide a summary output.
+# if really fancy, we can generate an html page with graphs.
