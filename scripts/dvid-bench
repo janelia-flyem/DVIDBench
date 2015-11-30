@@ -1,0 +1,14 @@
+#!/usr/bin/env python
+
+import argparse
+import os
+import dvidbench
+
+parser = argparse.ArgumentParser(description='Benchmark a DVID server')
+parser.add_argument('-s', '--server', required=True, help='DVID server url')
+parser.add_argument('-v', '--version', action="version", version=dvidbench.__version__ )
+cl_args = vars(parser.parse_args())
+
+print "run the benchmarking code now: " + dvidbench.__version__
+
+print dvidbench.__path__

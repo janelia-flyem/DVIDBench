@@ -1,9 +1,15 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
+
+import dvidbench
+
 setup(
-    name='dvid-bench',
-    version='0.1',
-    author='Jody Clements',
-    author_email='clementsj@janelia.hhmi.org',
-    url='https://github.com/janelia-flyem/dvid',
-    py_modules=['dvid-bench'],
+    name = 'dvidbench',
+    version = dvidbench.__version__,
+    author = 'Jody Clements',
+    author_email = 'clementsj@janelia.hhmi.org',
+    url = 'https://github.com/janelia-flyem/dvid',
+    keywords = 'dvid benchmarking',
+    install_requires = ['argparse'],
+    packages = find_packages(),
+    scripts = ['scripts/dvid-bench'],
 )
