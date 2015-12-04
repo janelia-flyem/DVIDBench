@@ -1,0 +1,12 @@
+{
+  "max_connections": 40,
+  "min_connections": 1,
+  "logs": "/tmp/dvid-bench",
+  "increments": 10,
+  "siege_path": "/opt/bin/siege",
+  "host":"localhost:4000",
+  "urls": [
+    "http://localhost:4000/api/repos/info",
+    "http://localhost:4000/"
+  ]
+}
