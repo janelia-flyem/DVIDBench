@@ -26,12 +26,12 @@ def get_repo_info (config):
     return response.json()
 
 def load_settings (args):
-    sys.stderr.write("looking for settings in %s\n" % cl_args['config'])
+    sys.stderr.write("looking for settings in %s\n" % args['config'])
     try:
-        config_json = open(cl_args['config'])
+        config_json = open(args['config'])
         config = json.load(config_json)
     except IOError:
-        sys.stderr.write("unable to find the config file: %s\n" % cl_args['config'])
+        sys.stderr.write("unable to find the config file: %s\n" % args['config'])
         sys.exit(1)
     except ValueError:
         sys.stderr.write("There was a problem reading the config. Is it valid JSON?\n")
@@ -138,41 +138,44 @@ def execute_siege(config, concurrent, urls_file):
 def display_results(config):
     return
 
+def main ():
+    parser = argparse.ArgumentParser(description='Benchmark a DVID server')
+    parser.add_argument('-v', '--version', action="version", version=dvidbench.__version__ )
+    parser.add_argument('config', help='location of the configuration file', nargs='?', default='.dvidbenchrc')
+    cl_args = vars(parser.parse_args())
+    # okay, we have the command line arguments
 
-parser = argparse.ArgumentParser(description='Benchmark a DVID server')
-parser.add_argument('-v', '--version', action="version", version=dvidbench.__version__ )
-parser.add_argument('config', help='location of the configuration file', nargs='?', default='.dvidbenchrc')
-cl_args = vars(parser.parse_args())
-# okay, we have the command line arguments
+    # look to see if the settings file exists.
+    config = load_settings(cl_args);
 
-# look to see if the settings file exists.
-config = load_settings(cl_args);
+    # contact the configured server and make sure it is alive
+    repo_info = get_repo_info(config)
 
-# contact the configured server and make sure it is alive
-repo_info = get_repo_info(config)
+    # print out repo list and ask which one to use if one isn't specified in settings
+    if not 'repo' in config:
+        config['repo'] = repo_selection(repo_info)
 
-# print out repo list and ask which one to use if one isn't specified in settings
-if not 'repo' in config:
-    config['repo'] = repo_selection(repo_info)
+    # TODO: create a repo and upload tiles if required
 
-# TODO: create a repo and upload tiles if required
+    check_siege_installed(config)
 
-check_siege_installed(config)
+    urls_file = create_temporary_urls_file(config)
 
-urls_file = create_temporary_urls_file(config)
+    verify_or_create_log_dir(config)
 
-verify_or_create_log_dir(config)
+    create_log_file(config)
 
-create_log_file(config)
+    print "run the benchmarking code now: " + dvidbench.__version__
+    # go through the users in steps of 50 from 1 -> 500
+    for i in range(0, config['max_connections'] + 1, config['increments']):
+        if i == 0:
+            i = 1
+        print "checking %s concurrent connections" % i
+        execute_siege(config, i, urls_file)
 
-print "run the benchmarking code now: " + dvidbench.__version__
-# go through the users in steps of 50 from 1 -> 500
-for i in range(0, config['max_connections'] + 1, config['increments']):
-    if i == 0:
-        i = 1
-    print "checking %s concurrent connections" % i
-    execute_siege(config, i, urls_file)
+    # parse the results and provide a summary output.
+    display_results(config)
+    # if really fancy, we can generate an html page with graphs.
 
-# parse the results and provide a summary output.
-display_results(config)
-# if really fancy, we can generate an html page with graphs.
+if __name__ == "__main__":
+    main()
