@@ -144,6 +144,10 @@ def execute_siege(config, concurrent, urls_file):
     return
 
 def display_results(config):
+    # open the log file and dump it to the terminal
+    log_file = os.path.join(config['logs'], config['log_file'])
+    logs = open(log_file)
+    print logs.read()
     return
 
 def main ():
