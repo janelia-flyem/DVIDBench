@@ -176,5 +176,3 @@ for i in range(0, config['max_connections'] + 1, config['increments']):
 # parse the results and provide a summary output.
 display_results(config)
 # if really fancy, we can generate an html page with graphs.
-
-print config
