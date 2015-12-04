@@ -135,6 +135,8 @@ def execute_siege(config, concurrent, urls_file):
     call(cmd, shell=True)
     # save the results to disk / sqlite database?
 
+def display_results(config):
+    return
 
 
 parser = argparse.ArgumentParser(description='Benchmark a DVID server')
@@ -172,6 +174,7 @@ for i in range(0, config['max_connections'] + 1, config['increments']):
     execute_siege(config, i, urls_file)
 
 # parse the results and provide a summary output.
+display_results(config)
 # if really fancy, we can generate an html page with graphs.
 
 print config
