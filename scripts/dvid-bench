@@ -131,7 +131,7 @@ def create_log_file(config):
 
 def execute_siege(config, concurrent, urls_file):
     log_file = os.path.join(config['logs'], config['log_file'])
-    cmd = '%s -t5s -c%s -f%s -l%s -m%s' % (config['siege_path'], concurrent, urls_file.name, log_file, concurrent)
+    cmd = '%s -d1 -t5s -c%s -f%s -l%s -m%s' % (config['siege_path'], concurrent, urls_file.name, log_file, concurrent)
     call(cmd, shell=True)
     # save the results to disk / sqlite database?
 
