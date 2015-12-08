@@ -11,5 +11,8 @@ setup(
     keywords = 'dvid benchmarking',
     install_requires = ['argparse'],
     packages = find_packages(),
+    package_data = {
+      '': [ '*.dat' ]
+    },
     scripts = ['scripts/dvid-bench'],
 )
