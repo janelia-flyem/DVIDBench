@@ -143,7 +143,7 @@ def create_log_file(config):
 
 def execute_siege(config, concurrent, urls_file):
     siege_config = resource_filename(__name__, '../siege.dat')
-    cmd = '%s -R%s -d1 -t5s -c%s -f%s -l%s -m%s' % (config['siege_path'], siege_config, concurrent, urls_file.name, __log_file__, concurrent)
+    cmd = '%s -R%s -b -d1 -t5s -c%s -f%s -l%s -m%s' % (config['siege_path'], siege_config, concurrent, urls_file.name, __log_file__, concurrent)
     if 'debug' in config and config['debug']:
         print cmd
     args = shlex.split(cmd)
