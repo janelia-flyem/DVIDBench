@@ -128,7 +128,9 @@ def verify_or_create_log_dir(config):
     return
 
 def create_log_file(config):
-    config['log_file'] = time.strftime("%Y%m%d-%H%M%S-") + str(os.getpid()) + '.log'
+    config['log_prefix'] = time.strftime("%Y%m%d-%H%M%S-") + str(os.getpid())
+    config['log_file'] = config['log_prefix'] + '.log'
+
     global __log_file__
     __log_file__ = os.path.join(config['logs'], config['log_file'])
     return
@@ -144,9 +146,15 @@ def execute_siege(config, concurrent, urls_file):
     out, err = proc.communicate()
     exitcode = proc.returncode
     if 'debug' in config and config['debug']:
-        print out
-        print err
+        print out # displays individual url timings
+        print err # displays runtime summaries
+
     # save the results to disk / sqlite database?
+    stdout_log = open(os.path.join(config['logs'], config['log_prefix']) + '-' + str(concurrent) + '-stdout.log' ,'a')
+    stdout_log.write(out)
+
+    stderr_log = open(os.path.join(config['logs'], config['log_prefix']) + '-' + str(concurrent) + '-stderr.log' ,'a')
+    stderr_log.write(err)
 
     return
 
@@ -156,6 +164,9 @@ def display_results(config):
     print logs.read()
     return
 
+
+# this installs a signal handler to trap CTRL-C and exit the program
+# gracefully.
 def signal_handler(signal, frame):
     # do cleanup here.
     logs = open(__log_file__, 'a')
@@ -163,7 +174,6 @@ def signal_handler(signal, frame):
     # finally quit
     sys.stderr.write("Program terminated by user.\n")
     sys.exit(0)
-
 signal.signal(signal.SIGINT,signal_handler)
 
 
