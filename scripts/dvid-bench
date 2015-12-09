@@ -40,6 +40,11 @@ def load_settings (args):
     except ValueError:
         sys.stderr.write("There was a problem reading the config. Is it valid JSON?\n")
         sys.exit(1)
+
+    # merge the command line args with the ones loaded from the config file.
+    # command line always wins.
+    config.update(args)
+
     return config
 
 def repo_selection(repos):
