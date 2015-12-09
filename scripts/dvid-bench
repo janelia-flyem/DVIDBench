@@ -10,6 +10,7 @@ import requests
 import tempfile
 import shlex
 import signal
+import re
 from subprocess import call, Popen, PIPE
 from dvidbench import benchmark
 from pkg_resources import resource_filename
@@ -133,8 +134,12 @@ def verify_or_create_log_dir(config):
     return
 
 def create_log_file(config):
-    config['log_prefix'] = time.strftime("%Y%m%d-%H%M%S-") + str(os.getpid())
-    config['log_file'] = config['log_prefix'] + '.log'
+    if 'results' in config:
+        config['log_prefix'] = config.get('results')
+    else:
+        config['log_prefix'] = time.strftime("%Y%m%d-%H%M%S-") + str(os.getpid())
+
+    config['log_file'] = config.get('log_prefix') + '.log'
 
     global __log_file__
     __log_file__ = os.path.join(config['logs'], config['log_file'])
@@ -164,9 +169,24 @@ def execute_siege(config, concurrent, urls_file):
     return
 
 def display_results(config):
+
+    log_file = config.get('log_file')
+
     # open the log file and dump it to the terminal
-    logs = open(__log_file__)
-    print logs.read()
+    with open(log_file) as summary:
+        for line in summary:
+            if re.search('\*{4}', line):
+                print line
+
+    for i in range(min_connections(config), max_connections(config), config.get('increments', 50)):
+        if i < 1:
+            i = 1
+        print "stats for {0} connections".format(i)
+
+
+        log_path = os.path.join(config['logs'], config['log_prefix']) + '-' + str(i) + '-stdout.log'
+        print "looking at logs {0}".format(log_path)
+
     return
 
 
@@ -197,38 +217,48 @@ def main ():
     parser.add_argument('-v', '--version', action="version", version=dvidbench.__version__ )
     parser.add_argument('config', help='location of the configuration file', nargs='?', default='.dvidbenchrc')
     parser.add_argument('-d', '--debug',  help='print extra debugging information', action='store_true')
+    parser.add_argument('-r', '--results',  help='parse results in supplied log file', action='store')
     cl_args = vars(parser.parse_args())
     # okay, we have the command line arguments
 
     # look to see if the settings file exists.
     config = load_settings(cl_args);
 
-    config['debug'] = cl_args['debug']
-    # contact the configured server and make sure it is alive
-    repo_info = get_repo_info(config)
+    if 'results' in config:
+        create_log_file(config)
 
-    # print out repo list and ask which one to use if one isn't specified in settings
-    if not 'repo' in config:
-        config['repo'] = repo_selection(repo_info)
+    else:
+        # contact the configured server and make sure it is alive
+        repo_info = get_repo_info(config)
 
-    # TODO: create a repo and upload tiles if required
+        # print out repo list and ask which one to use if one isn't specified in settings
+        if not 'repo' in config:
+            config['repo'] = repo_selection(repo_info)
 
-    check_siege_installed(config)
+        # TODO: create a repo and upload tiles if required
 
-    urls_file = create_temporary_urls_file(config)
+        check_siege_installed(config)
 
-    verify_or_create_log_dir(config)
+        urls_file = create_temporary_urls_file(config)
 
-    create_log_file(config)
+        verify_or_create_log_dir(config)
 
-    print "run the benchmarking code now: " + dvidbench.__version__
-    # go through the users in steps of 50 from 1 -> 500
-    for i in range(0, config['max_connections'] + 1, config['increments']):
-        if i == 0:
-            i = 1
-        print "checking %s concurrent connections" % i
-        execute_siege(config, i, urls_file)
-        time.sleep(5)
+        create_log_file(config)
+
+        print "run the benchmarking code now: " + dvidbench.__version__
+
+        # go through the users in incremental steps from min to max as configured by
+        # the user.
+
+
+        for i in range(min_connections(config), max_connections(config), config.get('increments', 50)):
+            # always have at least one connection.
+            concurrent = i
+            if concurrent < 1:
+                concurrent = 1
+            print "checking {0} concurrent connections".format(concurrent)
+            execute_siege(config, concurrent, urls_file)
+            time.sleep(5)
 
     # parse the results and provide a summary output.
     display_results(config)
