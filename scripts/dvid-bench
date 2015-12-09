@@ -9,6 +9,7 @@ import time
 import requests
 import tempfile
 import shlex
+import signal
 from subprocess import call, Popen, PIPE
 from dvidbench import benchmark
 from pkg_resources import resource_filename
@@ -152,6 +153,14 @@ def display_results(config):
     logs = open(log_file)
     print logs.read()
     return
+
+def signal_handler(signal, frame):
+    # do cleanup here.
+    sys.stderr.write("Program terminated by user.\n")
+    sys.exit(0)
+
+signal.signal(signal.SIGINT,signal_handler)
+
 
 def main ():
     parser = argparse.ArgumentParser(description='Benchmark a DVID server')
