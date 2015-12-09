@@ -181,6 +181,16 @@ def signal_handler(signal, frame):
     sys.exit(0)
 signal.signal(signal.SIGINT,signal_handler)
 
+def min_connections(config):
+    min = config.get('min_connections',0)
+    # start the range at 0 otherwise we get 1, 21, 41, 61 instead of 1, 20, 40, 60
+    if min <= 1 and config.get('increments', 50) > 1:
+        min = 0
+    return min
+
+def max_connections(config):
+    max = config.get('max_connections',500) + 1
+    return max
 
 def main ():
     parser = argparse.ArgumentParser(description='Benchmark a DVID server')
