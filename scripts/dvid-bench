@@ -175,17 +175,19 @@ def display_results(config):
     # open the log file and dump it to the terminal
     with open(log_file) as summary:
         for line in summary:
-            if re.search('\*{4}', line):
-                print line
-
-    for i in range(min_connections(config), max_connections(config), config.get('increments', 50)):
-        if i < 1:
-            i = 1
-        print "stats for {0} connections".format(i)
-
-
-        log_path = os.path.join(config['logs'], config['log_prefix']) + '-' + str(i) + '-stdout.log'
-        print "looking at logs {0}".format(log_path)
+            con_match = re.match(r'\*{4} (\d+)', line)
+            sum_match = re.match(r'\d{4}-\d{2}-\d{2}', line)
+            if con_match:
+                connections = con_match.group(1)
+                print "stats for {0} connections".format(connections)
+                stdout_log_path = os.path.join(config['logs'], config['log_prefix']) + '-' + str(connections) + '-stdout.log'
+                stdout = open(stdout_log_path, 'r')
+                stderr_log_path = os.path.join(config['logs'], config['log_prefix']) + '-' + str(connections) + '-stderr.log'
+                stderr = open(stderr_log_path, 'r')
+                print "looking at logs {0}".format(stdout_log_path)
+                print stderr.read()
+            elif sum_match:
+                print [ x.strip() for x in line.split(',')]
 
     return
 
