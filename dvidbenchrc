@@ -1,9 +1,9 @@
 {
-  "max_connections": 40,
-  "min_connections": 1,
+  "max_connections": 2000,
+  "min_connections": 1500,
   "duration": 10,
   "logs": "/tmp/dvid-bench",
-  "increments": 10,
+  "increments": 500,
   "siege_path": "/opt/bin/siege",
   "host":"localhost:4000",
   "urls": [

@@ -11,6 +11,7 @@ import tempfile
 import shlex
 import signal
 import re
+from tabulate import tabulate
 from subprocess import call, Popen, PIPE
 from dvidbench.benchmark import Benchmark
 from pkg_resources import resource_filename
@@ -152,7 +153,7 @@ def create_log_file(config):
 
 def execute_siege(config, concurrent, urls_file):
     siege_config = resource_filename(__name__, '../siege.dat')
-    cmd = '{program} -R{config} -b -d1 -t{duration}s -c{concurrent} -f{urls} -l{log} -m{message}'.format(
+    cmd = '{program} -R{config} -d1 -t{duration}s -c{concurrent} -f{urls} -l{log} -m{message}'.format(
         program=config['siege_path'],
         config=siege_config,
         duration= config.get('duration', 5),
@@ -180,27 +181,63 @@ def execute_siege(config, concurrent, urls_file):
 
     return
 
+def stdout_info(path):
+    log = open(path, 'r')
+    return log.read()
+
+def stderr_info(path, row):
+    with open(path) as log:
+        for line in log:
+            print line
+            trans_match = re.match(r'Transaction rate:\s+([\d\.]*)', line)
+            longest_match = re.match(r'Longest transaction:\s+([\d\.]*)', line)
+            shortest_match = re.match(r'Shortest transaction:\s+([\d\.]*)', line)
+            if trans_match:
+               trans_match.group(1)
+            if longest_match:
+                row[2] = longest_match.group(1)
+            if shortest_match:
+                row[1] = shortest_match.group(1)
+
 def display_results(config):
-    print config.get('log_prefix')
 
     log_file = config.get('log_file')
 
+    if not os.path.exists(log_file):
+        sys.stderr.write("Couldn't find results for {}.\n".format(config.get('log_prefix')))
+        sys.exit(1)
+
+    print "Displaying results for test {}.".format(config.get('log_prefix'))
+
+    tabular_data = []
+    headers = ["Concurrent Requests", "Fastest", "Slowest", "Avg", "Failures"]
+
     # open the log file and dump it to the terminal
     with open(log_file) as summary:
+        row_data = [None] * 5
         for line in summary:
             con_match = re.match(r'\*{4} (\d+)', line)
             sum_match = re.match(r'\d{4}-\d{2}-\d{2}', line)
             if con_match:
                 connections = con_match.group(1)
-                print "stats for {0} connections".format(connections)
-                stdout_log_path = os.path.join(config['logs'], config['log_prefix']) + '-' + str(connections) + '-stdout.log'
-                stdout = open(stdout_log_path, 'r')
-                stderr_log_path = os.path.join(config['logs'], config['log_prefix']) + '-' + str(connections) + '-stderr.log'
-                stderr = open(stderr_log_path, 'r')
-                print "looking at logs {0}".format(stdout_log_path)
-            elif sum_match:
-                print [ x.strip() for x in line.split(',')]
+                row_data[0] = connections
+                #stdout_log_path = os.path.join(config['logs'], config['log_prefix']) + '-' + str(connections) + '-stdout.log'
 
+                stderr_log_path = os.path.join(config['logs'], config['log_prefix']) + '-' + str(connections) + '-stderr.log'
+                if config.get('debug'):
+                    print "checking {}".format(stderr_log_path)
+                stderr_info(stderr_log_path, row_data)
+
+                if config.get('debug'):
+                    print "looking at logs {0}".format(stderr_log_path)
+            elif sum_match:
+                sum_data = [ x.strip() for x in line.split(',')]
+                row_data[3] = sum_data[4]
+                row_data[4] = sum_data[9]
+                tabular_data.append(row_data)
+                row_data = [None] * 5
+
+    print tabulate(tabular_data, headers=headers, tablefmt="fancy_grid")
     return
 
 

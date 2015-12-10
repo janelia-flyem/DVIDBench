@@ -9,7 +9,11 @@ setup(
     author_email = 'clementsj@janelia.hhmi.org',
     url = 'https://github.com/janelia-flyem/dvid',
     keywords = 'dvid benchmarking',
-    install_requires = ['argparse'],
+    install_requires = [
+        'argparse',
+        'tabulate',
+        'requests',
+    ],
     packages = find_packages(),
     package_data = {
       '': [ '*.dat' ]
