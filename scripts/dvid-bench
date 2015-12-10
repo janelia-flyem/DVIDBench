@@ -155,7 +155,7 @@ def execute_siege(config, concurrent, urls_file):
     cmd = '{program} -R{config} -b -d1 -t{duration}s -c{concurrent} -f{urls} -l{log} -m{message}'.format(
         program=config['siege_path'],
         config=siege_config,
-        duration=5,
+        duration= config.get('duration', 5),
         concurrent=concurrent,
         urls=urls_file.name,
         log= __log_file__,
