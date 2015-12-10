@@ -31,7 +31,9 @@ def get_repo_info (config):
     return response.json()
 
 def load_settings (args):
-    sys.stderr.write("looking for settings in %s\n" % args['config'])
+    if args.get('debug'):
+        sys.stderr.write("looking for settings in %s\n" % args['config'])
+
     try:
         config_json = open(args['config'])
         config = json.load(config_json)
@@ -114,7 +116,9 @@ def check_siege_installed(config):
         sys.stderr.write('siege does not appear to be installed in your PATH. Please install it or add the full path to your configuration\n')
         sys.exit(1)
 
-    print "using siege found at %s" % siege_path
+    if config.get('debug'):
+        print "using siege found at %s" % siege_path
+
     config['siege_path'] = siege_path
     return
 
@@ -225,7 +229,7 @@ def max_connections(config):
 def main ():
     parser = argparse.ArgumentParser(description='Benchmark a DVID server')
     parser.add_argument('-v', '--version', action="version", version=dvidbench.__version__ )
-    parser.add_argument('config', help='location of the configuration file', nargs='?', default='.dvidbenchrc')
+    parser.add_argument('config', help='location of the configuration file', nargs='?', default=os.path.expanduser('~/.dvidbenchrc'))
     parser.add_argument('-d', '--debug',  help='print extra debugging information', action='store_true')
     parser.add_argument('-r', '--results',  help='parse results in supplied log file', action='store')
     cl_args = vars(parser.parse_args())
@@ -253,7 +257,7 @@ def main ():
 
         create_log_file(config)
 
-        print "run the benchmarking code now: " + dvidbench.__version__
+        print "started dvidbench v{}".format(dvidbench.__version__)
 
         # go through the users in incremental steps from min to max as configured by
         # the user.
