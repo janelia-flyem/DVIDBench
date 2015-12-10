@@ -12,7 +12,7 @@ import shlex
 import signal
 import re
 from subprocess import call, Popen, PIPE
-from dvidbench import benchmark
+from dvidbench.benchmark import Benchmark
 from pkg_resources import resource_filename
 
 __log_file__ = './dvidbench.log'
@@ -134,21 +134,29 @@ def verify_or_create_log_dir(config):
     return
 
 def create_log_file(config):
-    if 'results' in config:
+    if 'results' in config and config['results']:
         config['log_prefix'] = config.get('results')
     else:
         config['log_prefix'] = time.strftime("%Y%m%d-%H%M%S-") + str(os.getpid())
 
-    config['log_file'] = config.get('log_prefix') + '.log'
+    config['log_file'] = os.path.join(config['logs'], config['log_prefix'] + '.log')
 
     global __log_file__
-    __log_file__ = os.path.join(config['logs'], config['log_file'])
+    __log_file__ = config['log_file']
     return
 
 
 def execute_siege(config, concurrent, urls_file):
     siege_config = resource_filename(__name__, '../siege.dat')
-    cmd = '%s -R%s -b -d1 -t5s -c%s -f%s -l%s -m%s' % (config['siege_path'], siege_config, concurrent, urls_file.name, __log_file__, concurrent)
+    cmd = '{program} -R{config} -b -d1 -t{duration}s -c{concurrent} -f{urls} -l{log} -m{message}'.format(
+        program=config['siege_path'],
+        config=siege_config,
+        duration=5,
+        concurrent=concurrent,
+        urls=urls_file.name,
+        log= __log_file__,
+        message=concurrent
+    )
     if 'debug' in config and config['debug']:
         print cmd
     args = shlex.split(cmd)
@@ -169,6 +177,7 @@ def execute_siege(config, concurrent, urls_file):
     return
 
 def display_results(config):
+    print config.get('log_prefix')
 
     log_file = config.get('log_file')
 
@@ -185,7 +194,6 @@ def display_results(config):
                 stderr_log_path = os.path.join(config['logs'], config['log_prefix']) + '-' + str(connections) + '-stderr.log'
                 stderr = open(stderr_log_path, 'r')
                 print "looking at logs {0}".format(stdout_log_path)
-                print stderr.read()
             elif sum_match:
                 print [ x.strip() for x in line.split(',')]
 
@@ -226,7 +234,7 @@ def main ():
     # look to see if the settings file exists.
     config = load_settings(cl_args);
 
-    if 'results' in config:
+    if 'results' in config and config['results']:
         create_log_file(config)
 
     else:
@@ -234,10 +242,8 @@ def main ():
         repo_info = get_repo_info(config)
 
         # print out repo list and ask which one to use if one isn't specified in settings
-        if not 'repo' in config:
-            config['repo'] = repo_selection(repo_info)
-
-        # TODO: create a repo and upload tiles if required
+        #if not 'repo' in config:
+        #    config['repo'] = repo_selection(repo_info)
 
         check_siege_installed(config)
 

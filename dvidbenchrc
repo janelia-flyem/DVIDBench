@@ -1,6 +1,7 @@
 {
   "max_connections": 40,
   "min_connections": 1,
+  "duration": 10,
   "logs": "/tmp/dvid-bench",
   "increments": 10,
   "siege_path": "/opt/bin/siege",
