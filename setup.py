@@ -15,8 +15,8 @@ setup(
         'requests',
     ],
     packages = find_packages(),
-    package_data = {
-      '': [ '*.dat' ]
-    },
     scripts = ['scripts/dvid-bench'],
+    package_data={
+        'dvidbench': ['*.dat']
+    }
 )
