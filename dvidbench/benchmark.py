@@ -70,11 +70,9 @@ class Benchmark:
             config_json = open(args['config'])
             config = json.load(config_json)
         except IOError:
-            sys.stderr.write("unable to find the config file: %s\n" % args['config'])
-            sys.exit(1)
+            raise ConfigError(msg = "unable to find the config file: %s\n" % args['config'])
         except ValueError:
-            sys.stderr.write("There was a problem reading the config. Is it valid JSON?\n")
-            sys.exit(1)
+            raise ConfigError(msg = "There was a problem reading the config. Is it valid JSON?\n")
 
         # merge the command line args with the ones loaded from the config file.
         # command line always wins.
@@ -85,16 +83,18 @@ class Benchmark:
 
 
     def get_repo_info (self):
+        if not self.config.get('host'):
+            raise ConfigError(msg='The supplied configuration json is missing the "host" key/value pair')
+
         server_info_url = "http://%s/api/repos/info" % self.config.get('host')
         try:
             response = requests.get(server_info_url)
         except requests.exceptions.ConnectionError:
-            sys.stderr.write("There was a problem contacting the server at %s. Is it available?\n" % config['host'])
-            sys.exit(1)
+            raise RemoteError(msg='There was a problem contacting the server at %s. Is it available?' % self.config.get('host', 'unknown'))
 
         if response.status_code != 200:
-            sys.stderr.write("There was a problem contacting the server at %s\n" % config['host'])
-            sys.exit(1)
+            raise RemoteError(msg='There was a problem contacting the server at {0}. Got a {1} response'.format(self.config.get('host', 'unknown'), response.status_codea))
+
         return response.json()
 
     def check_siege_installed(self):
@@ -116,15 +116,20 @@ class Benchmark:
         return
 
     def create_temporary_urls_file (self):
+        if not self.config.get('urls'):
+            raise ConfigError( msg = 'The "urls" key/value pair is missing from your configuration file.')
+
         #open temporary file for writing
         urls = tempfile.NamedTemporaryFile()
-        for url in self.config['urls']:
+        for url in self.config.get('urls'):
             urls.write(url + "\n")
 
         urls.flush()
         return urls
 
     def verify_or_create_log_dir(self):
+        if not self.config.get('logs'):
+            raise ConfigError( msg = 'The "logs" key/value pair is missing from your configuration file. This should be a path to a directory where the results will be saved')
         if not os.path.isdir(self.config['logs']):
             os.makedirs(self.config['logs'])
         return
@@ -265,3 +270,19 @@ class Benchmark:
         self.display_results()
         return
 
+
+#######################################
+# Error Classes
+
+class Error(Exception):
+    pass
+
+class ConfigError(Exception):
+
+    def __init__(self, msg):
+        self.msg = msg
+
+class RemoteError(Exception):
+
+    def __init__(self, msg):
+        self.msg = msg

@@ -6,7 +6,7 @@ import sys
 import time
 import signal
 import dvidbench
-from dvidbench import Benchmark
+from dvidbench import Benchmark, ConfigError, RemoteError
 
 __log_file__ = './dvidbench.log'
 
@@ -38,10 +38,14 @@ def main ():
 
     # okay, we have the command line arguments
 
-    bench = Benchmark(args=cl_args)
 
     global __log_file__
-    __log_file__ = bench.prepare_run()
+    try:
+        bench = Benchmark(args=cl_args)
+        __log_file__ = bench.prepare_run()
+    except (ConfigError, RemoteError) as e:
+        sys.stderr.write("{}\n".format(e.msg))
+        exit(1)
 
     print "started dvidbench v{}".format(dvidbench.__version__)
     bench.run()
