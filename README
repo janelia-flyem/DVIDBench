@@ -3,4 +3,6 @@ DVID Bench
 
 Benchmarking tool for checking response times of a DVID server.
 
+See README.md for installation and usage
+
 
