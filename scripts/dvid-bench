@@ -188,7 +188,6 @@ def stdout_info(path):
 def stderr_info(path, row):
     with open(path) as log:
         for line in log:
-            print line
             trans_match = re.match(r'Transaction rate:\s+([\d\.]*)', line)
             longest_match = re.match(r'Longest transaction:\s+([\d\.]*)', line)
             shortest_match = re.match(r'Shortest transaction:\s+([\d\.]*)', line)
