@@ -5,7 +5,10 @@ import tempfile
 import os
 import re
 import time
+import shlex
 from tabulate import tabulate
+from pkg_resources import resource_filename
+from subprocess import call, Popen, PIPE
 
 # http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
 def which(program):
@@ -187,4 +190,78 @@ class Benchmark:
         print tabulate(tabular_data, headers=headers, tablefmt="fancy_grid")
         return
 
+    def execute_siege(self, concurrent):
+
+
+        siege_config = resource_filename(__name__, 'siege.dat')
+        cmd = '{program} -R{config} -d1 -t{duration}s -c{concurrent} -f{urls} -l{log} -m{message}'.format(
+            program    = self.config['siege_path'],
+            config     = siege_config,
+            duration   = self.config.get('duration', 5),
+            concurrent = concurrent,
+            urls       = self.urls_file.name,
+            log        = self.config.get('log_file'),
+            message    = concurrent
+        )
+        if self.config.get('debug'):
+            print cmd
+        args = shlex.split(cmd)
+        proc = Popen(args, stdout=PIPE, stderr=PIPE)
+        out, err = proc.communicate()
+        exitcode = proc.returncode
+        if self.config.get('debug'):
+            print out # displays individual url timings
+            print err # displays runtime summaries
+
+        # save the results to disk / sqlite database?
+        stdout_log = open(os.path.join(self.config['logs'], self.config['log_prefix']) + '-' + str(concurrent) + '-stdout.log' ,'a')
+        stdout_log.write(out)
+
+        stderr_log = open(os.path.join(self.config['logs'], self.config['log_prefix']) + '-' + str(concurrent) + '-stderr.log' ,'a')
+        stderr_log.write(err)
+
+        return
+
+    def prepare_run(self):
+
+        if self.config.get('results'):
+            self.create_log_file()
+
+        else:
+            # contact the configured server and make sure it is alive
+            repo_info = self.get_repo_info()
+
+            # print out repo list and ask which one to use if one isn't specified in settings
+            #if not 'repo' in config:
+            #    config['repo'] = repo_selection(repo_info)
+
+            self.check_siege_installed()
+
+            self.urls_file = self.create_temporary_urls_file()
+
+            self.verify_or_create_log_dir()
+
+            self.create_log_file()
+
+
+            # go through the users in incremental steps from min to max as configured by
+            # the user.
+
+        return self.config.get('log_file')
+
+    def run(self):
+
+        if not self.config.get('results'):
+            for i in range(self.min_connections(), self.max_connections(), self.config.get('increments', 50)):
+                # always have at least one connection.
+                concurrent = i
+                if concurrent < 1:
+                    concurrent = 1
+                print "checking {0} concurrent connections".format(concurrent)
+                self.execute_siege(concurrent)
+                time.sleep(5)
+
+        # parse the results and provide a summary output.
+        self.display_results()
+        return
 

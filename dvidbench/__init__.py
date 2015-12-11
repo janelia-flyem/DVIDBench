@@ -1,5 +1,3 @@
-from pkg_resources import resource_filename
-
-__siegedat__ = resource_filename(__name__, 'siege.dat')
+from benchmark import Benchmark
 
 __version__ = '0.2.1'
