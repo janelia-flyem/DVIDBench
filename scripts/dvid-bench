@@ -29,6 +29,7 @@ def parse_command_arguments():
     parser.add_argument('config', help='location of the configuration file', nargs='?', default=os.path.expanduser('~/.dvidbenchrc'))
     parser.add_argument('-d', '--debug',  help='print extra debugging information', action='store_true')
     parser.add_argument('-r', '--results',  help='parse results in supplied log file', action='store')
+    parser.add_argument('-R', '--random',  help='randomly request urls from the url list', action='store_true')
     return vars(parser.parse_args())
 
 

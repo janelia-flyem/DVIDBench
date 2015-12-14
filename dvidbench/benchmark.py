@@ -206,6 +206,10 @@ class Benchmark:
             log        = self.config.get('log_file'),
             message    = concurrent
         )
+
+        if self.config.get('random'):
+            cmd += ' -i'
+
         if self.config.get('debug'):
             print cmd
         args = shlex.split(cmd)
