@@ -6,7 +6,7 @@ import sys
 import time
 import signal
 import dvidbench
-from dvidbench import Benchmark, ConfigError, RemoteError
+from dvidbench import Benchmark, ConfigError, RemoteError, DependencyError, DataError
 
 __log_file__ = './dvidbench.log'
 
@@ -43,12 +43,16 @@ def main ():
     try:
         bench = Benchmark(args=cl_args)
         __log_file__ = bench.prepare_run()
-    except (ConfigError, RemoteError) as e:
+    except (ConfigError, RemoteError, DependencyError, DataError) as e:
         sys.stderr.write("{}\n".format(e.msg))
         exit(1)
 
     print "started dvidbench v{}".format(dvidbench.__version__)
-    bench.run()
+    try:
+        bench.run()
+    except DataError as e:
+        sys.stderr.write("{}\n".format(e.msg))
+        exit(1)
 
     # if really fancy, we can generate an html page with graphs.
 

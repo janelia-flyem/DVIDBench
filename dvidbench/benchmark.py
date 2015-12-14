@@ -106,8 +106,7 @@ class Benchmark:
             siege_path = which('siege')
 
         if not siege_path:
-            sys.stderr.write('siege does not appear to be installed in your PATH. Please install it or add the full path to your configuration\n')
-            sys.exit(1)
+            raise DependencyError(msg='siege does not appear to be installed in your PATH. Please install it or add the full path to your configuration')
 
         if self.config.get('debug'):
             print "using siege found at %s" % siege_path
@@ -160,8 +159,7 @@ class Benchmark:
         log_file = self.config.get('log_file')
 
         if not os.path.exists(log_file):
-            sys.stderr.write("Couldn't find results for {}.\n".format(self.config.get('log_prefix')))
-            sys.exit(1)
+            raise DataError( msg="Couldn't find log file for {}".format(self.config.get('log_prefix')))
 
         print "Displaying results for test {}.".format(self.config.get('log_prefix'))
 
@@ -217,6 +215,7 @@ class Benchmark:
         if self.config.get('debug'):
             print out # displays individual url timings
             print err # displays runtime summaries
+            print exitcode
 
         # save the results to disk / sqlite database?
         stdout_log = open(os.path.join(self.config['logs'], self.config['log_prefix']) + '-' + str(concurrent) + '-stdout.log' ,'a')
@@ -283,6 +282,16 @@ class ConfigError(Exception):
         self.msg = msg
 
 class RemoteError(Exception):
+
+    def __init__(self, msg):
+        self.msg = msg
+
+class DependencyError(Exception):
+
+    def __init__(self, msg):
+        self.msg = msg
+
+class DataError(Exception):
 
     def __init__(self, msg):
         self.msg = msg
