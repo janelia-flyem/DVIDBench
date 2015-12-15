@@ -133,6 +133,13 @@ class Benchmark:
             os.makedirs(self.config['logs'])
         return
 
+    def log_parameters_used(self):
+        parameter_log = open(os.path.join(self.config['logs'], self.config['log_prefix'] + '.params'), 'w')
+        parameter_log.write(json.dumps(self.config))
+        parameter_log.close
+        return
+
+
     def create_log_file(self):
         if 'results' in self.config and self.config['results']:
             self.config['log_prefix'] = self.config.get('results')
@@ -251,15 +258,15 @@ class Benchmark:
 
             self.create_log_file()
 
-
-            # go through the users in incremental steps from min to max as configured by
-            # the user.
+            self.log_parameters_used()
 
         return self.config.get('log_file')
 
-    def run(self):
 
+    def run(self):
         if not self.config.get('results'):
+            # go through the urls in incremental steps from min to max as configured by
+            # the user.
             for i in range(self.min_connections(), self.max_connections(), self.config.get('increments', 50)):
                 # always have at least one connection.
                 concurrent = i
