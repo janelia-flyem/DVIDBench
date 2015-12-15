@@ -93,7 +93,7 @@ class Benchmark:
             raise RemoteError(msg='There was a problem contacting the server at %s. Is it available?' % self.config.get('host', 'unknown'))
 
         if response.status_code != 200:
-            raise RemoteError(msg='There was a problem contacting the server at {0}. Got a {1} response'.format(self.config.get('host', 'unknown'), response.status_codea))
+            raise RemoteError(msg='There was a problem contacting the server at {0}. Got a {1} response'.format(self.config.get('host', 'unknown'), response.status_code))
 
         return response.json()
 
