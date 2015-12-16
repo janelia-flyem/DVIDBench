@@ -274,7 +274,9 @@ class Benchmark:
                     concurrent = 1
                 print "checking {0} concurrent connections".format(concurrent)
                 self.execute_siege(concurrent)
-                time.sleep(5)
+                if i + 1 < self.max_connections():
+                    print "sleeping to clear sockets"
+                    time.sleep(self.config.get('duration', 20))
 
         # parse the results and provide a summary output.
         self.display_results()
