@@ -4,6 +4,7 @@ import os
 import web
 import gevent
 import rpc
+import json
 from rpc import Message
 
 def parse_command_arguments():
@@ -11,7 +12,7 @@ def parse_command_arguments():
     parser.add_argument('-v', '--version', action="version", version=dvidbench.__version__ )
     parser.add_argument('-d', '--debug',  help='print extra debugging information', action='store_true')
 
-    parser.add_argument('config', help='location of the configuration file', nargs='?', default=os.path.expanduser('~/.dvidbenchrc'))
+    parser.add_argument('config_file', help='location of the configuration file', nargs='?', default=os.path.expanduser('~/.dvidbenchrc'))
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--slave',  help='set this process to run as a slave worker', action='store_true')
@@ -41,20 +42,50 @@ def main():
 
     return
 
-def master_listener(server):
+def master_listener(server, args):
     while True:
         msg = server.recv()
-        if msg:
+        if msg.type == "client-started":
+            # add the client to the list of registered clients
             print "received: {}".format(msg.data)
+            server.send(Message('config', args.config, None))
+
+        elif msg.type == "client-ready":
+            # set clients status as ready
+            print "received: {}".format(msg.data)
+
+def load_config_data(args):
+    if args.debug:
+        sys.stderr.write("looking for settings in %s\n" % args.config_file)
+
+    try:
+        config_json = open(args.config_file)
+        config = json.load(config_json)
+    except IOError:
+        print "unable to find the config file: %s\n" % args.config_file
+    except ValueError:
+        print "There was a problem reading the config. Is it valid JSON?\n"
+
+    # merge the command line args with the ones loaded from the config file.
+    # command line always wins.
+
+    args.config = config
+    return args
 
 
 def master(args):
+    # load configuration file
+    args = load_config_data(args)
+
     # start up web gui thread
     main_greenlet = gevent.spawn(web.start, args)
+
     # start up rpc server
     server = rpc.Server(args.master_host, args.master_port)
+
     # wait for commands from web interface
-    gevent.spawn(master_listener, server)
+    gevent.spawn(master_listener, server, args)
+
     # send commands forward to clients
 
     # need to use events for the following
@@ -67,8 +98,12 @@ def master(args):
 def client_listener(client):
     while True:
         msg = client.recv()
-        if msg:
-            print msg
+        if msg.type == 'config':
+            print "got configuration from master"
+            print msg.data.get('urls')
+        elif msg.type == 'quit':
+            print msg.data
+
 
 def slave(args):
     print "running as slave"
@@ -76,7 +111,7 @@ def slave(args):
     client = rpc.Client(args.master_host, args.master_port)
     # signal ready state to master
     print "sent message to {0}:{1}".format(args.master_host, args.master_port)
-    client.send(Message('client-start','greetings master','my uuid'))
+    client.send(Message('client-started','greetings master','my uuid'))
     # receive configuration and store
     # wait for run command
     main_greenlet = gevent.spawn(client_listener, client)
