@@ -40,12 +40,20 @@ def main():
 
     return
 
+def master_listener(server):
+    while True:
+        msg = server.recv()
+        if msg:
+            print msg
+
+
 def master(args):
     # start up web gui thread
     main_greenlet = gevent.spawn(web.start, args)
     # start up rpc server
     server = rpc.Server(args.master_host, args.master_port)
     # wait for commands from web interface
+    gevent.spawn(master_listener, server)
     # send commands forward to clients
 
     # need to use events for the following
@@ -66,6 +74,7 @@ def slave(args):
     # start up rpc client
     client = rpc.Client(args.master_host, args.master_port)
     # signal ready state to master
+    print "sent message to {0}:{1}".format(args.master_host, args.master_port)
     client.send('client ready')
     # receive configuration and store
     # wait for run command

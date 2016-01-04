@@ -3,7 +3,11 @@ class Socket():
         pass
 
     def send(self,msg):
-        pass
+        print "sent {}".format(msg)
+        self.sender.send(msg)
+        return
 
     def recv(self):
-        pass
+        msg = self.receiver.recv()
+        print msg
+        return

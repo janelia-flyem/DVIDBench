@@ -6,9 +6,11 @@ class Client(Socket):
         context = zmq.Context()
         self.receiver = context.socket(zmq.PULL)
         self.receiver.connect("tcp://{0}:{1}".format(host, port + 1))
+        print "receiving messages on {0}:{1}".format(host, port + 1)
 
         self.sender = context.socket(zmq.PUSH)
         self.sender.connect("tcp://{0}:{1}".format(host, port))
+        print "sending messages on {0}:{1}".format(host, port)
         return
 
 
