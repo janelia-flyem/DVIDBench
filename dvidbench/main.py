@@ -4,6 +4,7 @@ import os
 import web
 import gevent
 import rpc
+from rpc import Message
 
 def parse_command_arguments():
     parser = argparse.ArgumentParser(description='Benchmark a DVID server')
@@ -44,7 +45,7 @@ def master_listener(server):
     while True:
         msg = server.recv()
         if msg:
-            print msg
+            print "received: {}".format(msg.data)
 
 
 def master(args):
@@ -75,7 +76,7 @@ def slave(args):
     client = rpc.Client(args.master_host, args.master_port)
     # signal ready state to master
     print "sent message to {0}:{1}".format(args.master_host, args.master_port)
-    client.send('client ready')
+    client.send(Message('client-start','greetings master','my uuid'))
     # receive configuration and store
     # wait for run command
     main_greenlet = gevent.spawn(client_listener, client)
