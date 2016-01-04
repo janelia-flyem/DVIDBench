@@ -15,8 +15,9 @@ setup(
         'requests',
     ],
     packages = find_packages(),
-    scripts = ['scripts/dvid-bench'],
-    package_data={
-        'dvidbench': ['*.dat']
+    entry_points={
+        'console_scripts': [
+            'dvidbench = dvidbench.main:main',
+        ],
     }
 )
