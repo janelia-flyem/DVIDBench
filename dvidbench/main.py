@@ -5,7 +5,9 @@ import web
 import gevent
 import rpc
 import json
-from rpc import Message
+import sys
+from master import Master
+from slave import Slave
 
 def parse_command_arguments():
     parser = argparse.ArgumentParser(description='Benchmark a DVID server')
@@ -42,55 +44,18 @@ def main():
 
     return
 
-def master_listener(server, args, clients):
-    while True:
-        msg = server.recv()
-        if msg.type == "client-started":
-            # add the client to the list of registered clients
-            print "received: {}".format(msg.data)
-            clients.append(msg.node_id)
-            print "currently serving {} clients".format(len(clients))
-            for client in clients:
-                server.send(Message('config', args.config, client))
-
-        elif msg.type == "client-ready":
-            # set clients status as ready
-            print "received: {}".format(msg.data)
-
-def load_config_data(args):
-    if args.debug:
-        sys.stderr.write("looking for settings in %s\n" % args.config_file)
-
-    try:
-        config_json = open(args.config_file)
-        config = json.load(config_json)
-    except IOError:
-        print "unable to find the config file: %s\n" % args.config_file
-    except ValueError:
-        print "There was a problem reading the config. Is it valid JSON?\n"
-
-    # merge the command line args with the ones loaded from the config file.
-    # command line always wins.
-
-    args.config = config
-    return args
 
 
 def master(args):
     clients = []
 
-    # load configuration file
-    args = load_config_data(args)
-
     # start up web gui thread
     main_greenlet = gevent.spawn(web.start, args)
 
     # start up rpc server
-    server = rpc.Server(args.master_host, args.master_port)
+    master = Master(args)
 
     # wait for commands from web interface
-    gevent.spawn(master_listener, server, args, clients)
-
 
     # send commands forward to clients
 
@@ -101,26 +66,17 @@ def master(args):
         # log stats reported from clients
     return main_greenlet
 
-def client_listener(client):
-    while True:
-        msg = client.recv()
-        if msg.type == 'config':
-            print "got configuration from master"
-            print msg.data.get('urls')
-        elif msg.type == 'quit':
-            print msg.data
 
 
 def slave(args):
     print "running as slave"
     # start up rpc client
-    client = rpc.Client(args.master_host, args.master_port)
+    client = Slave(args)
+
     # signal ready state to master
-    print "sent message to {0}:{1}".format(args.master_host, args.master_port)
-    client.send(Message('client-started','greetings master','my uuid'))
     # receive configuration and store
     # wait for run command
-    main_greenlet = gevent.spawn(client_listener, client)
+    main_greenlet = gevent.spawn(client.listener)
     # run requests until receive stop command
     # report stats
     # shutdown if requested

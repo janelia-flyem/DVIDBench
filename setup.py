@@ -13,6 +13,8 @@ setup(
         'argparse',
         'tabulate',
         'requests',
+        'gevent',
+        'json',
     ],
     packages = find_packages(),
     entry_points={
