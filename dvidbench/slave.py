@@ -70,13 +70,15 @@ class Slave():
            url = random.choice(self.config.get('urls'))
            print "requesting url: {}".format(url)
            start = time.time()
+           response_size = None
            try:
                data = urlopen(url).read()
+               response_size = len(data)
            except Exception as e:
                print "unable to open {0}: {1}".format(url, e)
 
            end = time.time() - start
-           print "request took {} ms".format(end * 1000)
+           print "fetching {0} took {1} ms".format(response_size, end * 1000)
            gevent.sleep(3)
 
     def start_workers(self,count):
