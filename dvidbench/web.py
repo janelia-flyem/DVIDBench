@@ -20,6 +20,11 @@ def index():
         clients=clients
     )
 
+@app.route('/start/<int:count>')
+def start_workers(count):
+    master.runner.start_workers(count)
+    return "started {} workers".format(count)
+
 def start(options):
     print "Server started and listening at http://{0}:{1}/".format(options.console_host or "*", options.console_port)
     wsgi.WSGIServer((options.console_host, options.console_port), app, log=None).serve_forever()

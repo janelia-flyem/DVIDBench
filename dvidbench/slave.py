@@ -36,7 +36,7 @@ class Slave():
                 self.quit()
 
             elif msg.type == 'start':
-                print "starting requests"
+                print "starting {} workers".format(msg.data)
 
             elif msg.type == 'stop':
                 print "stopping requests"

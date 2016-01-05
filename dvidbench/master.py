@@ -67,3 +67,12 @@ class Master():
 
         self.config = config
         return
+
+    def start_workers(self, count):
+        # divide the count among the workers
+        per_client = count / self.client_count()
+        # contact each one in kind and tell them to start x workers
+        for client in self.clients:
+            self.server.send(Message('start', per_client, client))
+
+        print "started {} workers".format(count)
