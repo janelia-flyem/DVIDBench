@@ -42,13 +42,16 @@ def main():
 
     return
 
-def master_listener(server, args):
+def master_listener(server, args, clients):
     while True:
         msg = server.recv()
         if msg.type == "client-started":
             # add the client to the list of registered clients
             print "received: {}".format(msg.data)
-            server.send(Message('config', args.config, None))
+            clients.append(msg.node_id)
+            print "currently serving {} clients".format(len(clients))
+            for client in clients:
+                server.send(Message('config', args.config, client))
 
         elif msg.type == "client-ready":
             # set clients status as ready
@@ -74,6 +77,8 @@ def load_config_data(args):
 
 
 def master(args):
+    clients = []
+
     # load configuration file
     args = load_config_data(args)
 
@@ -84,7 +89,8 @@ def master(args):
     server = rpc.Server(args.master_host, args.master_port)
 
     # wait for commands from web interface
-    gevent.spawn(master_listener, server, args)
+    gevent.spawn(master_listener, server, args, clients)
+
 
     # send commands forward to clients
 
