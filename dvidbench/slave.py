@@ -4,9 +4,16 @@ import rpc
 import gevent
 import events
 import random
+import time
+import sys
 from gevent import GreenletExit
 from gevent.pool import Group
 from rpc import Message
+
+if sys.version_info[0] == 3:
+    from urllib.request import urlopen
+else:
+    from urllib2 import urlopen
 
 runner = None
 
@@ -60,7 +67,16 @@ class Slave():
 
     def worker(self):
        while True:
-           print "requesting url: {}".format(random.choice(self.config.get('urls')))
+           url = random.choice(self.config.get('urls'))
+           print "requesting url: {}".format(url)
+           start = time.time()
+           try:
+               data = urlopen(url).read()
+           except Exception as e:
+               print "unable to open {0}: {1}".format(url, e)
+
+           end = time.time() - start
+           print "request took {} ms".format(end * 1000)
            gevent.sleep(3)
 
     def start_workers(self,count):
