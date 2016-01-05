@@ -39,11 +39,15 @@ def main():
         greenlet.join()
     except KeyboardInterrupt as e:
         # shutdown if requested
+        cleanup()
         exit(0)
 
 
     return
 
+def cleanup():
+    print "sending all clients the quit signal"
+    print "closing down"
 
 
 def master(args):
