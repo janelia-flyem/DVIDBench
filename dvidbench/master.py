@@ -25,7 +25,8 @@ class Master():
             msg = self.server.recv()
             if msg.type == "client-started":
                 # add the client to the list of registered clients
-                print "received: {}".format(msg.data)
+                print msg
+                print "Received contact from client {}".format(msg.node_id)
                 self.clients.append(msg.node_id)
                 print "currently serving {} clients".format(len(self.clients))
                 for client in self.clients:

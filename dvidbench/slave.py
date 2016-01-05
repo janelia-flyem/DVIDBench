@@ -13,6 +13,7 @@ class Slave():
         self.master_host = options.master_host
         self.master_port = options.master_port
         self.client = rpc.Client(self.master_host, self.master_port)
+        self.config = None
 
         print "sent message to {0}:{1}".format(self.master_host, self.master_port)
         self.client.send(Message('client-started','greetings master',self.identity))
@@ -20,8 +21,7 @@ class Slave():
 
     @property
     def identity(self):
-        print self.slave_id
-        return
+        return self.slave_id
 
     def listener(self):
         while True:
@@ -29,5 +29,6 @@ class Slave():
             if msg.type == 'config':
                 print "got configuration from master"
                 print msg.data.get('urls')
+                self.config = msg.data
             elif msg.type == 'quit':
                 print msg.data
