@@ -3,6 +3,7 @@ import socket
 import rpc
 import gevent
 import events
+import random
 from gevent import GreenletExit
 from gevent.pool import Group
 from rpc import Message
@@ -59,7 +60,7 @@ class Slave():
 
     def worker(self):
        while True:
-           print "requesting url"
+           print "requesting url: {}".format(random.choice(self.config.get('urls')))
            gevent.sleep(3)
 
     def start_workers(self,count):

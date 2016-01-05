@@ -8,7 +8,7 @@ import json
 import sys
 import events
 import master
-from slave import Slave
+import slave
 
 def parse_command_arguments():
     parser = argparse.ArgumentParser(description='Benchmark a DVID server')
@@ -79,18 +79,18 @@ def as_master(args):
 def as_slave(args):
     print "running as slave"
     # start up rpc client
-    client = Slave(args)
+    slave.runner = slave.Slave(args)
 
     # signal ready state to master
     # receive configuration and store
     # wait for run command
-    main_greenlet = gevent.spawn(client.listener)
+    main_greenlet = gevent.spawn(slave.runner.listener)
     # run requests until receive stop command
     # report stats
     # shutdown if requested
     def on_quit():
         print "terminating client"
-        client.quit()
+        slave.runner.quit()
     events.quitting += on_quit
     return main_greenlet
 
