@@ -36,6 +36,10 @@ class Master():
                 # set clients status as ready
                 print "received: {}".format(msg.data)
 
+    def quit(self):
+        for client in self.clients:
+            self.server.send(Message("quit",None,None))
+
     def load_config_data(self, args):
         if args.debug:
             sys.stderr.write("looking for settings in %s\n" % args.config_file)

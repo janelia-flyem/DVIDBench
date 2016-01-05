@@ -6,6 +6,7 @@ import gevent
 import rpc
 import json
 import sys
+import events
 from master import Master
 from slave import Slave
 
@@ -40,6 +41,7 @@ def main():
     except KeyboardInterrupt as e:
         # shutdown if requested
         cleanup()
+        events.quitting.fire()
         exit(0)
 
 
@@ -68,6 +70,11 @@ def master(args):
             # on client start
             # on config update
         # log stats reported from clients
+        # shutting down
+
+    def on_quit():
+        master.quit()
+    events.quitting += on_quit
     return main_greenlet
 
 

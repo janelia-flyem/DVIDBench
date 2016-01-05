@@ -2,6 +2,7 @@ import uuid
 import socket
 import rpc
 import gevent
+import events
 from gevent import GreenletExit
 from gevent.pool import Group
 from rpc import Message
@@ -28,7 +29,24 @@ class Slave():
             msg = self.client.recv()
             if msg.type == 'config':
                 print "got configuration from master"
-                print msg.data.get('urls')
                 self.config = msg.data
+
             elif msg.type == 'quit':
-                print msg.data
+                print "shutting down client: {}".format(self.identity)
+                self.quit()
+
+            elif msg.type == 'start':
+                print "starting requests"
+
+            elif msg.type == 'stop':
+                print "stopping requests"
+
+            else:
+                print "Don't know what to do with message: {}".format(msg.type)
+
+    def quit(self):
+        # close down all the workers
+        print "closing down workers"
+        # message back to master?
+        # exit
+        exit(0)
