@@ -48,5 +48,6 @@ class Slave():
         # close down all the workers
         print "closing down workers"
         # message back to master?
+        self.client.send(Message('client-quit', "i'm a gonner", self.identity))
         # exit
         exit(0)

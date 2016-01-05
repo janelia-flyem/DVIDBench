@@ -6,6 +6,8 @@ from gevent.pool import Group
 import rpc
 from rpc import Message
 
+runner = None # singleton so that we only have one master runner.
+
 class Master():
 
     def __init__(self, options):
@@ -19,6 +21,9 @@ class Master():
         self.greenlet = Group()
         self.greenlet.spawn(self.listener)
         return
+
+    def client_count(self):
+        return len(self.clients)
 
     def listener(self):
         while True:
@@ -35,6 +40,9 @@ class Master():
             elif msg.type == "client-ready":
                 # set clients status as ready
                 print "received: {}".format(msg.data)
+
+            elif msg.type == "client-quit":
+                self.clients.remove(msg.node_id)
 
     def quit(self):
         for client in self.clients:

@@ -7,7 +7,7 @@ import rpc
 import json
 import sys
 import events
-from master import Master
+import master
 from slave import Slave
 
 def parse_command_arguments():
@@ -32,34 +32,29 @@ def main():
     # parse command line arguments
     args = parse_command_arguments()
     if args.slave:
-        greenlet = slave(args)
+        greenlet = as_slave(args)
     else:
-        greenlet = master(args)
+        greenlet = as_master(args)
 
     try:
         greenlet.join()
     except KeyboardInterrupt as e:
         # shutdown if requested
-        cleanup()
         events.quitting.fire()
         exit(0)
 
 
     return
 
-def cleanup():
-    print "sending all clients the quit signal"
-    print "closing down"
 
-
-def master(args):
+def as_master(args):
     clients = []
 
     # start up web gui thread
     main_greenlet = gevent.spawn(web.start, args)
 
     # start up rpc server
-    master = Master(args)
+    master.runner = master.Master(args)
 
     # wait for commands from web interface
 
@@ -73,13 +68,15 @@ def master(args):
         # shutting down
 
     def on_quit():
-        master.quit()
+        print "sending all clients the quit signal"
+        print "closing down"
+        master.runner.quit()
     events.quitting += on_quit
     return main_greenlet
 
 
 
-def slave(args):
+def as_slave(args):
     print "running as slave"
     # start up rpc client
     client = Slave(args)
@@ -91,6 +88,10 @@ def slave(args):
     # run requests until receive stop command
     # report stats
     # shutdown if requested
+    def on_quit():
+        print "terminating client"
+        client.quit()
+    events.quitting += on_quit
     return main_greenlet
 
 
