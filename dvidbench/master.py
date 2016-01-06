@@ -44,6 +44,9 @@ class Master():
             elif msg.type == "client-quit":
                 self.clients.remove(msg.node_id)
 
+            elif msg.type == "stats":
+                print "stats: {}".format(msg.data)
+
     def quit(self):
         for client in self.clients:
             self.server.send(Message("quit",None,None))

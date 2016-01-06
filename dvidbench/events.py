@@ -56,3 +56,8 @@ quitting = EventHook()
 """
 *quitting* is fired when the locust process in exiting
 """
+
+request_complete = EventHook()
+"""
+*request_complete* is fired when a worker has completed a request
+"""

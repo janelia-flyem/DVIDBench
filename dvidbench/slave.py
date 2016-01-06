@@ -10,6 +10,8 @@ from gevent import GreenletExit
 from gevent.pool import Group
 from rpc import Message
 
+STATS_REPORT_INTERVAL = 3
+
 if sys.version_info[0] == 3:
     from urllib.request import urlopen
 else:
@@ -26,10 +28,15 @@ class Slave():
         self.client = rpc.Client(self.master_host, self.master_port)
         self.config = None
         self.workers = Group()
+        self.stats = {
+            'workers': 0
+        }
 
         print "sent message to {0}:{1}".format(self.master_host, self.master_port)
-        self.client.send(Message('client-started','greetings master',self.identity))
-        pass
+        self.client.send(Message('client-started','greetings to master',self.identity))
+
+        self.workers.spawn(self.stats_reporter)
+        return
 
     @property
     def identity(self):
@@ -78,11 +85,25 @@ class Slave():
                print "unable to open {0}: {1}".format(url, e)
 
            end = time.time() - start
-           print "fetching {0} took {1} ms".format(response_size, end * 1000)
+           print "fetching {0} bytes took {1} ms".format(response_size, end * 1000)
+           # TODO: replace this with the real status
+           #events.request_complete.fire({
+           #    'size': response_size,
+           #    'duration': end * 1000,
+           #    'status': '200?', 
+           #    'timestamp': int(time.time())
+           #})
            gevent.sleep(3)
 
     def start_workers(self,count):
         for i in range(count):
             print "starting worker {}".format(i)
             self.workers.spawn(self.worker)
+        self.stats['workers'] += count;
+
+    def stats_reporter(self):
+        while True:
+            # TDOD: fetch data for stats reporting
+            self.client.send(Message('stats', self.stats, self.identity))
+            gevent.sleep(STATS_REPORT_INTERVAL)
 
