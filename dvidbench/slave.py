@@ -6,6 +6,7 @@ import events
 import random
 import time
 import sys
+import requests
 from gevent import GreenletExit
 from gevent.pool import Group
 from rpc import Message
@@ -28,6 +29,9 @@ class Slave():
         self.client = rpc.Client(self.master_host, self.master_port)
         self.config = None
         self.workers = Group()
+        self.session = requests.Session()
+        self.min_wait = 1000
+        self.max_wait = 1000
         self.stats = {
             'workers': 0
         }
@@ -76,24 +80,21 @@ class Slave():
        while True:
            url = random.choice(self.config.get('urls'))
            print "requesting url: {}".format(url)
-           start = time.time()
-           response_size = None
-           try:
-               data = urlopen(url).read()
-               response_size = len(data)
-           except Exception as e:
-               print "unable to open {0}: {1}".format(url, e)
+           stats = {}
 
-           end = time.time() - start
-           print "fetching {0} bytes took {1} ms".format(response_size, end * 1000)
-           # TODO: replace this with the real status
-           #events.request_complete.fire({
-           #    'size': response_size,
-           #    'duration': end * 1000,
-           #    'status': '200?', 
-           #    'timestamp': int(time.time())
-           #})
-           gevent.sleep(3)
+           start = time.time()
+
+           response = self.session.get(url)
+
+           stats['duration'] = (time.time() - start) * 1000
+           stats['content_size'] = len(response.content)
+           stats['status_code'] = response.status_code
+
+           self.client.send(Message("stats", stats, self.identity))
+
+           millis = random.randint(self.min_wait, self.max_wait)
+           seconds = millis / 1000.0
+           gevent.sleep(seconds)
 
     def start_workers(self,count):
         for i in range(count):
