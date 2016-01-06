@@ -5,6 +5,7 @@ from gevent import GreenletExit
 from gevent.pool import Group
 import rpc
 from rpc import Message
+from stats import Stats
 
 runner = None # singleton so that we only have one master runner.
 
@@ -20,6 +21,8 @@ class Master():
         self.server = rpc.Server(self.master_host, self.master_port)
         self.greenlet = Group()
         self.greenlet.spawn(self.listener)
+
+        self.stats = Stats()
         return
 
     def client_count(self):
