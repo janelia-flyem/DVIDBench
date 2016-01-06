@@ -31,12 +31,11 @@ class Slave():
         self.workers = Group()
         self.session = requests.Session()
         self.min_wait = 1000
-        self.max_wait = 1000
+        self.max_wait = 2000
         self.stats = {
             'workers': 0
         }
 
-        print "sent message to {0}:{1}".format(self.master_host, self.master_port)
         self.client.send(Message('client-started','greetings to master',self.identity))
 
         self.workers.spawn(self.stats_reporter)
