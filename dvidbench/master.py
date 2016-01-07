@@ -47,7 +47,10 @@ class Master():
             elif msg.type == "client-quit":
                 self.clients.remove(msg.node_id)
 
-            elif msg.type == "stats":
+            elif msg.type == "request-stats":
+                self.stats.add(msg.data)
+
+            elif msg.type == "client-stats":
                 print "stats: {}".format(msg.data)
 
     def quit(self):

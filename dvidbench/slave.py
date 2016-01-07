@@ -10,6 +10,7 @@ import requests
 from gevent import GreenletExit
 from gevent.pool import Group
 from rpc import Message
+from stats import ClientStats
 
 STATS_REPORT_INTERVAL = 3
 
@@ -32,9 +33,7 @@ class Slave():
         self.session = requests.Session()
         self.min_wait = 1000
         self.max_wait = 2000
-        self.stats = {
-            'workers': 0
-        }
+        self.stats = ClientStats()
 
         self.client.send(Message('client-started','greetings to master',self.identity))
 
@@ -89,7 +88,7 @@ class Slave():
            stats['content_size'] = len(response.content)
            stats['status_code'] = response.status_code
 
-           self.client.send(Message("stats", stats, self.identity))
+           self.stats.add(stats)
 
            millis = random.randint(self.min_wait, self.max_wait)
            seconds = millis / 1000.0
@@ -99,11 +98,12 @@ class Slave():
         for i in range(count):
             print "starting worker {}".format(i)
             self.workers.spawn(self.worker)
-        self.stats['workers'] += count;
+        self.stats.workers += count;
 
     def stats_reporter(self):
         while True:
             # TDOD: fetch data for stats reporting
-            self.client.send(Message('stats', self.stats, self.identity))
+            self.client.send(Message('client-stats', self.stats.serialize(), self.identity))
+            self.stats.clear()
             gevent.sleep(STATS_REPORT_INTERVAL)
 
