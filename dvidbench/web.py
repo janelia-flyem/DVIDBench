@@ -1,5 +1,5 @@
 from gevent import wsgi
-from flask import Flask, make_response, request, render_template
+from flask import Flask, make_response, request, render_template, abort, redirect, url_for
 import dvidbench
 import os
 import master
@@ -20,10 +20,13 @@ def index():
         clients=clients
     )
 
-@app.route('/start/<int:count>')
-def start_workers(count):
-    master.runner.start_workers(count)
-    return "started {} workers".format(count)
+@app.route('/start', methods=['POST'])
+def start_workers():
+    count = int(request.form['count'])
+    if count > 0 and master.runner.client_count() > 0:
+        master.runner.start_workers(count)
+
+    return redirect(url_for('index'))
 
 def start(options):
     print "Server started and listening at http://{0}:{1}/".format(options.console_host or "*", options.console_port)

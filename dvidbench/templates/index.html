@@ -1,3 +1,8 @@
 <h1>DVID Bench <span>{{version}}</span></h1>
 
 <p>Clients: {{ clients }}</p>
+
+<form action="/start" method="post">
+  <input type="number"  name="count" id="count"/>
+  <input type="submit"/>
+</form>
