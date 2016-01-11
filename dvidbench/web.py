@@ -14,11 +14,16 @@ def index():
     if master.runner:
         clients = master.runner.client_count()
 
+    try:
+        stats=master.runner.stats.aggregated_stats(name="total", full_request_history=True)
+    except Exception:
+        stats = {}
+
 
     return render_template("index.html",
         version=dvidbench.__version__,
         clients=clients,
-        stats=master.runner.stats
+        stats=stats
     )
 
 @app.route('/start', methods=['POST'])

@@ -466,7 +466,6 @@ def on_slave_report(client_id, data):
             global_stats.errors[error_key] = StatsError.from_dict(error)
         else:
             global_stats.errors[error_key].occurences += error["occurences"]
-        import pdb; pdb.set_trace()
 
 events.request_success += on_request_success
 events.request_failure += on_request_failure

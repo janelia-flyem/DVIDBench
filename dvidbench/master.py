@@ -50,10 +50,6 @@ class Master():
 
             elif msg.type == "client-stats":
                 events.slave_report.fire(client_id=msg.node_id, data=msg.data)
-                try:
-                    print runner.stats
-                except Exception:
-                    print "stats not ready"
 
     def quit(self):
         for client in self.clients:
