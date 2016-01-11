@@ -1,11 +1,12 @@
 import gevent
 import json
 import sys
+import events
 from gevent import GreenletExit
 from gevent.pool import Group
 import rpc
 from rpc import Message
-from stats import Stats
+from stats import global_stats
 
 runner = None # singleton so that we only have one master runner.
 
@@ -22,7 +23,7 @@ class Master():
         self.greenlet = Group()
         self.greenlet.spawn(self.listener)
 
-        self.stats = Stats()
+        self.stats = global_stats
         return
 
     def client_count(self):
@@ -47,11 +48,12 @@ class Master():
             elif msg.type == "client-quit":
                 self.clients.remove(msg.node_id)
 
-            elif msg.type == "request-stats":
-                self.stats.add(msg.data)
-
             elif msg.type == "client-stats":
-                print "stats: {}".format(msg.data)
+                events.slave_report.fire(client_id=msg.node_id, data=msg.data)
+                try:
+                    print runner.stats
+                except Exception:
+                    print "stats not ready"
 
     def quit(self):
         for client in self.clients:

@@ -17,7 +17,8 @@ def index():
 
     return render_template("index.html",
         version=dvidbench.__version__,
-        clients=clients
+        clients=clients,
+        stats=master.runner.stats
     )
 
 @app.route('/start', methods=['POST'])

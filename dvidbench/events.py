@@ -61,3 +61,8 @@ request_complete = EventHook()
 """
 *request_complete* is fired when a worker has completed a request
 """
+
+request_success = EventHook()
+request_failure = EventHook()
+report_to_master = EventHook()
+slave_report = EventHook()

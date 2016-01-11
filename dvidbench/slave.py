@@ -10,7 +10,7 @@ import requests
 from gevent import GreenletExit
 from gevent.pool import Group
 from rpc import Message
-from stats import ClientStats
+from stats import global_stats
 
 STATS_REPORT_INTERVAL = 3
 
@@ -33,7 +33,8 @@ class Slave():
         self.session = requests.Session()
         self.min_wait = 1000
         self.max_wait = 2000
-        self.stats = ClientStats()
+        self.stats = global_stats
+        self.worker_count = 0
 
         self.client.send(Message('client-started','greetings to master',self.identity))
 
@@ -84,11 +85,31 @@ class Slave():
 
            response = self.session.get(url)
 
-           stats['duration'] = (time.time() - start) * 1000
+           stats['duration'] = int((time.time() - start) * 1000)
            stats['content_size'] = len(response.content)
            stats['status_code'] = response.status_code
+           stats['url'] = url
 
-           self.stats.add(stats)
+           try:
+               # calling this will throw an error for anything other than a
+               # successful response.
+               response.raise_for_status()
+           except (MissingSchema, InvalidSchema, InvalidURL):
+               raise
+           except RequestException as e:
+               events.request_failure.fire(
+                   request_type = 'GET',
+                   name = url,
+                   response_time = stats['duration'],
+                   exception = e
+               )
+           else:
+               events.request_success.fire(
+                   request_type = 'GET',
+                   name = url,
+                   response_time = stats['duration'],
+                   response_length = stats['content_size']
+               )
 
            millis = random.randint(self.min_wait, self.max_wait)
            seconds = millis / 1000.0
@@ -98,12 +119,12 @@ class Slave():
         for i in range(count):
             print "starting worker {}".format(i)
             self.workers.spawn(self.worker)
-        self.stats.workers += count;
+        self.worker_count += count;
 
     def stats_reporter(self):
         while True:
-            # TDOD: fetch data for stats reporting
-            self.client.send(Message('client-stats', self.stats.serialize(), self.identity))
-            self.stats.clear()
+            data = {'workers': self.worker_count}
+            events.report_to_master.fire(client_id=self.slave_id, data=data)
+            self.client.send(Message('client-stats', data, self.slave_id))
             gevent.sleep(STATS_REPORT_INTERVAL)
 
