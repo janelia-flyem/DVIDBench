@@ -34,6 +34,12 @@ def start_workers():
 
     return redirect(url_for('index'))
 
+@app.route("/stats/reset")
+def reset_stats():
+  master.runner.stats.reset_all()
+  return "ok"
+
+
 def start(options):
     print "Server started and listening at http://{0}:{1}/".format(options.console_host or "*", options.console_port)
     wsgi.WSGIServer((options.console_host, options.console_port), app, log=None).serve_forever()
