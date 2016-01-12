@@ -11,8 +11,10 @@ app.root_path = os.path.dirname(os.path.abspath(__file__))
 @app.route('/')
 def index():
     clients = 0
+    workers = 0
     if master.runner:
         clients = master.runner.client_count()
+        workers = master.runner.worker_count()
 
     try:
         stats=master.runner.stats.aggregated_stats(name="total", full_request_history=True)
@@ -23,6 +25,7 @@ def index():
     return render_template("index.html",
         version=dvidbench.__version__,
         clients=clients,
+        workers=workers,
         stats=stats
     )
 

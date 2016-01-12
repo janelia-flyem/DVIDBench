@@ -13,7 +13,7 @@ runner = None # singleton so that we only have one master runner.
 class Master():
 
     def __init__(self, options):
-        self.clients = []
+        self.clients = {}
         self.master_host = options.master_host
         self.master_port = options.master_port
 
@@ -24,10 +24,22 @@ class Master():
         self.greenlet.spawn(self.listener)
 
         self.stats = global_stats
+
+        def on_slave_report(client_id, data):
+            self.clients[client_id]['workers'] = data['workers']
+            return
+        events.slave_report += on_slave_report
+
         return
 
     def client_count(self):
         return len(self.clients)
+
+    def worker_count(self):
+        count = 0
+        for client in self.clients.itervalues():
+            count += client['workers']
+        return count
 
     def listener(self):
         while True:
@@ -36,9 +48,9 @@ class Master():
                 # add the client to the list of registered clients
                 print msg
                 print "Received contact from client {}".format(msg.node_id)
-                self.clients.append(msg.node_id)
+                self.clients[msg.node_id] = {'workers': 0}
                 print "currently serving {} clients".format(len(self.clients))
-                for client in self.clients:
+                for client in self.clients.iterkeys():
                     self.server.send(Message('config', self.config, client))
 
             elif msg.type == "client-ready":
@@ -46,7 +58,8 @@ class Master():
                 print "received: {}".format(msg.data)
 
             elif msg.type == "client-quit":
-                self.clients.remove(msg.node_id)
+                if msg.node_id in self.clients:
+                  del self.clients[msg.node_id]
 
             elif msg.type == "client-stats":
                 events.slave_report.fire(client_id=msg.node_id, data=msg.data)
@@ -83,3 +96,4 @@ class Master():
             self.server.send(Message('start', per_client, client))
 
         print "started {} workers".format(count)
+
