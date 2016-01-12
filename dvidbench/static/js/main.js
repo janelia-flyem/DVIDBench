@@ -5,7 +5,15 @@
       // reset stats.
       $('.reset').on('click', function(){
         $.get('/stats/reset', function(data) {
-          // do nothing 
+          // do nothing
+        });
+      });
+
+      $('.add_workers').on('click', function(e) {
+        e.preventDefault();
+
+        $.post('/start',$('form').serialize(), function(data) {
+          //do nothing for now.
         });
       });
 
