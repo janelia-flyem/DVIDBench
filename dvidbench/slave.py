@@ -35,6 +35,7 @@ class Slave():
         self.max_wait = 2000
         self.stats = global_stats
         self.worker_count = 0
+        self.debug = options.debug
 
         self.client.send(Message('client-started','greetings to master',self.identity))
 
@@ -78,7 +79,8 @@ class Slave():
     def worker(self):
        while True:
            url = random.choice(self.config.get('urls'))
-           print "requesting url: {}".format(url)
+           if self.debug:
+               print "requesting url: {}".format(url)
            stats = {}
 
            start = time.time()

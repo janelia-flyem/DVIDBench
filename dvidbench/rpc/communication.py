@@ -5,7 +5,6 @@ class Socket():
         pass
 
     def send(self,msg):
-        print "sent {}".format(msg.data)
         self.sender.send(msg.serialize())
         return
 
