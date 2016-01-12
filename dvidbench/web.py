@@ -39,6 +39,11 @@ def start_workers():
 
     return redirect(url_for('index'))
 
+@app.route('/stop')
+def stop_workers():
+    master.runner.stop_workers()
+    return(redirect(url_for('index')))
+
 @app.route('/stats/update')
 def get_stats():
     data = {

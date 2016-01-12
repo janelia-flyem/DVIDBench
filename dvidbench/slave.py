@@ -39,7 +39,9 @@ class Slave():
 
         self.client.send(Message('client-started','greetings to master',self.identity))
 
-        self.workers.spawn(self.stats_reporter)
+        # placing stats reporter in its own group, so it doesn't get killed
+        # with the workers.
+        self.reporter = Group().spawn(self.stats_reporter)
         return
 
     @property
@@ -62,7 +64,7 @@ class Slave():
                 self.start_workers(msg.data)
 
             elif msg.type == 'stop':
-                print "stopping requests"
+                self.stop_workers(msg.data)
 
             else:
                 print "Don't know what to do with message: {}".format(msg.type)
@@ -122,6 +124,13 @@ class Slave():
             print "starting worker {}".format(i)
             self.workers.spawn(self.worker)
         self.worker_count += count;
+        return
+
+    def stop_workers(self,count):
+        self.workers.kill(block=True)
+        self.worker_count = 0
+        return
+
 
     def stats_reporter(self):
         while True:

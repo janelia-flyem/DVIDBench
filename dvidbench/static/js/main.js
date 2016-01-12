@@ -17,6 +17,10 @@
         });
       });
 
+      $('.stop').on('click', function() {
+        $.get('/stop', function() {});
+      })
+
       function updatePage() {
         // ajax call to fetch the data from the server.
         $.getJSON('/stats/update', function(data) {
