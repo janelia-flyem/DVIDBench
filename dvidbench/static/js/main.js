@@ -6,10 +6,12 @@
       function updatePage() {
         // ajax call to fetch the data from the server.
         $.getJSON('/stats/update', function(data) {
-          console.log(data);
           // update the DOM with the new data.
           $('.workers').text(data.workers);
           $('.clients').text(data.clients);
+          for (var stat in data.stats[1]) {
+            $('.'+ stat).text(data.stats[1][stat])
+          }
         });
       }
 

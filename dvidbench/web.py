@@ -1,5 +1,6 @@
 from gevent import wsgi
 from flask import Flask, make_response, request, render_template, abort, redirect, url_for
+from itertools import chain
 import dvidbench
 import os
 import master
@@ -41,16 +42,36 @@ def start_workers():
 @app.route('/stats/update')
 def get_stats():
     data = {
-       'clients': master.runner.client_count(),
-       'workers': master.runner.worker_count()
+      'clients': master.runner.client_count(),
+      'workers': master.runner.worker_count(),
     }
+
+    stats = []
+    for s in chain(_sort_stats(master.runner.stats.entries), [master.runner.stats.aggregated_stats(name="total", full_request_history=True)]):
+        stats.append({
+            "method": 'GET',
+            "name": s.name,
+            "num_requests": s.num_requests,
+            "num_failures": s.num_failures,
+            "avg_response_time": s.avg_response_time,
+            "min_response_time": s.min_response_time or 0,
+            "max_response_time": s.max_response_time,
+            "current_rps": s.current_rps,
+            "median_response_time": s.median_response_time,
+            "avg_content_length": s.avg_content_length,
+        })
+    data['stats'] = stats
     return json.dumps(data)
 
 
 @app.route("/stats/reset")
 def reset_stats():
-  master.runner.stats.reset_all()
-  return "ok"
+    master.runner.stats.reset_all()
+    return "ok"
+
+
+def _sort_stats(stats):
+    return [stats[key] for key in sorted(stats.iterkeys())]
 
 
 def start(options):
