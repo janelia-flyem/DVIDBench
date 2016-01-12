@@ -1,13 +1,22 @@
-<h1>DVID Bench <span>{{version}}</span></h1>
+<html>
+  <head>
+    <title>DVID Bench</title>
+  </head>
+  <body>
+    <h1>DVID Bench <span>{{version}}</span></h1>
 
-<p>Clients: {{ clients }}</p>
-<p>Workers: {{ workers }}</p>
+    <p>Clients: <span class="clients">{{ clients }}</span></p>
+    <p>Workers: <span class="workers">{{ workers }}</span></p>
 
-<form action="/start" method="post">
-  <input type="number"  name="count" id="count"/>
-  <input type="submit"/>
-</form>
+    <form action="/start" method="post">
+      <input type="number"  name="count" id="count"/>
+      <input type="submit"/>
+    </form>
 
-<p># Requests  {{stats.num_requests}}</p>
-<p>RPS {{stats.current_rps}}</p>
-<p>AVG Response (ms) {{stats.avg_response_time}}</p>
+    <p># Requests  {{stats.num_requests}}</p>
+    <p>RPS {{stats.current_rps}}</p>
+    <p>AVG Response (ms) {{stats.avg_response_time}}</p>
+    <script type="text/javascript" src="/static/js/jquery-1.12.0.min.js"></script>
+    <script type="text/javascript" src="/static/js/main.js"></script>
+  </body>
+</html>

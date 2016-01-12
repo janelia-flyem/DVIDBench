@@ -3,6 +3,7 @@ from flask import Flask, make_response, request, render_template, abort, redirec
 import dvidbench
 import os
 import master
+import json
 
 app = Flask(__name__)
 app.debug = True
@@ -36,6 +37,15 @@ def start_workers():
         master.runner.start_workers(count)
 
     return redirect(url_for('index'))
+
+@app.route('/stats/update')
+def get_stats():
+    data = {
+       'clients': master.runner.client_count(),
+       'workers': master.runner.worker_count()
+    }
+    return json.dumps(data)
+
 
 @app.route("/stats/reset")
 def reset_stats():
