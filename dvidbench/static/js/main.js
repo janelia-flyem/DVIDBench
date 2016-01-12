@@ -1,7 +1,13 @@
 (function($) {
 
     $(document).ready(function() {
-      console.log('page loaded');
+
+      // reset stats.
+      $('.reset').on('click', function(){
+        $.get('/stats/reset', function(data) {
+          // do nothing 
+        });
+      });
 
       function updatePage() {
         // ajax call to fetch the data from the server.
