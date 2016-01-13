@@ -39,12 +39,20 @@ class RequestStatsAdditionError(Exception):
 class RequestStats(object):
     def __init__(self):
         self.entries = {}
+        self.timings = {}
         self.errors = {}
         self.num_requests = 0
         self.num_failures = 0
         self.max_requests = None
         self.last_request_timestamp = None
         self.start_time = None
+
+    def get_timings(self, name):
+        timings = self.timings.get(name)
+        if not timings:
+            timings = TimingsEntry(name)
+            self.timings[name] = timings
+        return timings
 
     def get(self, name, method):
         """
@@ -75,6 +83,8 @@ class RequestStats(object):
         self.num_failures = 0
         for r in self.entries.itervalues():
             r.reset()
+        for r in self.timings.itervalues():
+            r.reset()
 
     def clear_all(self):
         """
@@ -83,10 +93,37 @@ class RequestStats(object):
         self.num_requests = 0
         self.num_failures = 0
         self.entries = {}
+        self.timings = {}
         self.errors = {}
         self.max_requests = None
         self.last_request_timestamp = None
         self.start_time = None
+
+class TimingsEntry(object):
+
+    name = None
+    max_response_times = {}
+
+    def __init__(self, name):
+        self.name = name
+
+    def reset(self):
+        self.max_response_times = {}
+        return
+
+    def log(self, timestamp, new_max_response_time):
+        """
+        check if there is an existing max, if so take the max and save it.
+        """
+        max_record = self.max_response_times.get(timestamp)
+
+        if max_record:
+            self.max_response_times[timestamp] = max(max_record, new_max_response_time)
+        else:
+            self.max_response_times[timestamp] = new_max_response_time
+        return
+
+
 
 
 class StatsEntry(object):
@@ -453,8 +490,15 @@ def on_report_to_master(client_id, data):
     global_stats.errors = {}
 
 def on_slave_report(client_id, data):
+    timing_entry = global_stats.get_timings(client_id)
+    record_stamp = int(time.time())
+
     for stats_data in data["stats"]:
         entry = StatsEntry.unserialize(stats_data)
+        # for each entry get the max_response_time,
+        # store that in a time stamped data object for that client.
+        timing_entry.log(record_stamp, entry.max_response_time)
+
         request_key = (entry.name, entry.method)
         if not request_key in global_stats.entries:
             global_stats.entries[request_key] = StatsEntry(global_stats, entry.name, entry.method)
