@@ -105,7 +105,7 @@ class Master():
 
             self.server.send(Message('start', workers, client))
             seen_first = True
-            print "started {} workers on client {}".format(per_client, client)
+            print "started {} workers on client {}".format(workers, client)
 
         return
 
