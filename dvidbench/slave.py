@@ -130,6 +130,12 @@ class Slave():
            gevent.sleep(seconds)
 
     def start_workers(self, count):
+        # put random sleep in here, so that all workers aren't started at exactly the
+        # same time between clients. Should stop a peak/trough request cycle
+        millis = random.randint(1, 1000)
+        seconds = millis / 1000.0
+        gevent.sleep(seconds)
+
         self.stop_workers(count)
         for i in range(count):
             self.workers.spawn(self.worker)
