@@ -11,6 +11,7 @@ from gevent import GreenletExit
 from gevent.pool import Group
 from rpc import Message
 from stats import global_stats
+from requests.exceptions import (RequestException, MissingSchema, InvalidSchema, InvalidURL)
 
 STATS_REPORT_INTERVAL = 3
 
@@ -87,33 +88,41 @@ class Slave():
 
            start = time.time()
 
-           response = self.session.get(url)
-
-           stats['duration'] = int((time.time() - start) * 1000)
-           stats['content_size'] = len(response.content)
-           stats['status_code'] = response.status_code
-           stats['url'] = url
-
            try:
-               # calling this will throw an error for anything other than a
-               # successful response.
-               response.raise_for_status()
-           except (MissingSchema, InvalidSchema, InvalidURL):
-               raise
+               response = self.session.get(url)
            except RequestException as e:
                events.request_failure.fire(
                    request_type = 'GET',
                    name = url,
-                   response_time = stats['duration'],
+                   response_time = 0,
                    exception = e
                )
            else:
-               events.request_success.fire(
-                   request_type = 'GET',
-                   name = url,
-                   response_time = stats['duration'],
-                   response_length = stats['content_size']
-               )
+               stats['duration'] = int((time.time() - start) * 1000)
+               stats['content_size'] = len(response.content)
+               stats['status_code'] = response.status_code
+               stats['url'] = url
+
+               try:
+                   # calling this will throw an error for anything other than a
+                   # successful response.
+                   response.raise_for_status()
+               except (MissingSchema, InvalidSchema, InvalidURL):
+                   raise
+               except RequestException as e:
+                   events.request_failure.fire(
+                       request_type = 'GET',
+                       name = url,
+                       response_time = stats['duration'],
+                       exception = e
+                   )
+               else:
+                   events.request_success.fire(
+                       request_type = 'GET',
+                       name = url,
+                       response_time = stats['duration'],
+                       response_length = stats['content_size']
+                   )
 
            millis = random.randint(self.min_wait, self.max_wait)
            seconds = millis / 1000.0
@@ -137,6 +146,8 @@ class Slave():
         while True:
             data = {'workers': self.worker_count}
             events.report_to_master.fire(client_id=self.slave_id, data=data)
+            if self.debug:
+                print data
             self.client.send(Message('client-stats', data, self.slave_id))
             gevent.sleep(STATS_REPORT_INTERVAL)
 
