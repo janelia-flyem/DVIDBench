@@ -32,7 +32,7 @@ class Slave():
         self.workers = Group()
         self.session = requests.Session()
         self.min_wait = 1000
-        self.max_wait = 2000
+        self.max_wait = 1000
         self.stats = global_stats
         self.worker_count = 0
         self.debug = options.debug
