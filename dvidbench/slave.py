@@ -90,6 +90,7 @@ class Slave():
 
            try:
                response = self.session.get(url)
+           #capture connection errors when the remote is down.
            except RequestException as e:
                events.request_failure.fire(
                    request_type = 'GET',
