@@ -91,11 +91,22 @@ class Master():
     def start_workers(self, count):
         # divide the count among the workers
         per_client = count / self.client_count()
+
+        # is this the first worker
+        seen_first = False
+
         # contact each one in kind and tell them to start x workers
         for client in self.clients.iterkeys():
-            self.server.send(Message('start', per_client, client))
+            workers = per_client
 
-        print "started {} workers".format(count)
+            # is there going to be a remainder, shove it on the first worker?
+            if not seen_first and (count % self.client_count() == 1):
+                workers += 1
+
+            self.server.send(Message('start', workers, client))
+            seen_first = True
+            print "started {} workers on client {}".format(per_client, client)
+
         return
 
     def stop_workers(self):

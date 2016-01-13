@@ -119,11 +119,12 @@ class Slave():
            seconds = millis / 1000.0
            gevent.sleep(seconds)
 
-    def start_workers(self,count):
+    def start_workers(self, count):
+        self.stop_workers(count)
         for i in range(count):
-            print "starting worker {}".format(i)
             self.workers.spawn(self.worker)
         self.worker_count += count;
+        print "Started {} workers".format(count)
         return
 
     def stop_workers(self,count):
