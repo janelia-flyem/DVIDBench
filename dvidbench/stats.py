@@ -103,12 +103,14 @@ class TimingsEntry(object):
 
     name = None
     max_response_times = {}
+    current_max = 0
 
     def __init__(self, name):
         self.name = name
 
     def reset(self):
         self.max_response_times = {}
+        self.current_max = 0
         return
 
     def log(self, timestamp, new_max_response_time):
@@ -121,6 +123,8 @@ class TimingsEntry(object):
             self.max_response_times[timestamp] = max(max_record, new_max_response_time)
         else:
             self.max_response_times[timestamp] = new_max_response_time
+
+        self.current_max = new_max_response_time
         return
 
 

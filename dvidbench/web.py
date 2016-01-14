@@ -28,7 +28,8 @@ def index():
         version=dvidbench.__version__,
         clients=clients,
         workers=workers,
-        stats=stats
+        stats=stats,
+        timings=master.runner.stats.timings,
     )
 
 @app.route('/start', methods=['POST'])
@@ -43,6 +44,14 @@ def start_workers():
 def stop_workers():
     master.runner.stop_workers()
     return(redirect(url_for('index')))
+
+@app.route('/stats/timings')
+def get_timings():
+    data = {}
+    timings = master.runner.stats.timings
+    for t in timings.iterkeys():
+        data[t] = timings[t].current_max
+    return json.dumps(data)
 
 @app.route('/stats/update')
 def get_stats():

@@ -1,6 +1,12 @@
 <html>
   <head>
     <title>DVID Bench</title>
+    <style>
+      .response_time_graph {
+        height:200px;
+        width:400px;
+      }
+    </style>
   </head>
   <body>
     <h1>DVID Bench <span>{{version}}</span></h1>
@@ -21,7 +27,12 @@
     <p>Max Response (ms) <span class="max_response_time">{{stats.max_response_time}}</p>
     <p>Error Count <span class="num_failures">{{stats.num_failures}}</p>
 
+    <p>Max Response times: {{timings}}</p>
+
+    <div class="response_time_graph"></div>
+
     <script type="text/javascript" src="/static/js/jquery-1.12.0.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.flot.min.js"></script>
     <script type="text/javascript" src="/static/js/main.js"></script>
   </body>
 </html>
