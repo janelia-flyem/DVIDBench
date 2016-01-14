@@ -27,8 +27,8 @@
           // update the DOM with the new data.
           $('.workers').text(data.workers);
           $('.clients').text(data.clients);
-          for (var stat in data.stats[1]) {
-            $('.'+ stat).text(data.stats[1][stat])
+          for (var stat in data.stats[data.stats.length - 1]) {
+            $('.'+ stat).text(data.stats[data.stats.length -1][stat])
           }
         });
       }
