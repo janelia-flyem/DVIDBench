@@ -1,0 +1,2 @@
+recursive-include dvidbench/static *
+recursive-include dvidbench/templates *
