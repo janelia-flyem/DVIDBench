@@ -77,15 +77,13 @@ class Master():
         try:
             config_json = open(args.config_file)
             config = json.load(config_json)
+            self.config = config
         except IOError:
             print "unable to find the config file: %s\n" % args.config_file
+            exit(1)
         except ValueError:
             print "There was a problem reading the config. Is it valid JSON?\n"
-
-        # merge the command line args with the ones loaded from the config file.
-        # command line always wins.
-
-        self.config = config
+            exit(1)
         return
 
     def start_workers(self, count):
