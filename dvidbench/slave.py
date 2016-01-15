@@ -14,6 +14,7 @@ from stats import global_stats
 from requests.exceptions import (RequestException, MissingSchema, InvalidSchema, InvalidURL)
 
 STATS_REPORT_INTERVAL = 3
+SLOW_REQUEST_THRESHOLD = 100 #ms
 
 if sys.version_info[0] == 3:
     from urllib.request import urlopen
@@ -136,6 +137,14 @@ class Slave():
                        response_time = stats['duration'],
                        response_length = stats['content_size']
                    )
+
+                   if stats['duration'] > SLOW_REQUEST_THRESHOLD:
+                       # TODO: record the request here.
+                       events.request_slow.fire (
+                           name = url,
+                           response_time = stats['duration'],
+                           response_length = stats['content_size']
+                       )
 
            millis = random.randint(self.min_wait, self.max_wait)
            seconds = millis / 1000.0

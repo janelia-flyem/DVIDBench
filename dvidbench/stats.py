@@ -514,7 +514,11 @@ def on_slave_report(client_id, data):
         else:
             global_stats.errors[error_key].occurences += error["occurences"]
 
+def on_request_slow(name, response_time, response_length):
+    print "****** slow request({0}): {1}".format(response_time, name)
+
 events.request_success += on_request_success
 events.request_failure += on_request_failure
+events.request_slow += on_request_slow
 events.report_to_master += on_report_to_master
 events.slave_report += on_slave_report

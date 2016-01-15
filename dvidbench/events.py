@@ -64,5 +64,6 @@ request_complete = EventHook()
 
 request_success = EventHook()
 request_failure = EventHook()
+request_slow = EventHook()
 report_to_master = EventHook()
 slave_report = EventHook()
