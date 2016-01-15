@@ -25,6 +25,7 @@ THE SOFTWARE.
 """
 
 import time
+import datetime
 import gevent
 import hashlib
 
@@ -515,7 +516,7 @@ def on_slave_report(client_id, data):
             global_stats.errors[error_key].occurences += error["occurences"]
 
 def on_request_slow(name, response_time, response_length):
-    print "****** slow request({0}): {1}".format(response_time, name)
+    print "****** {2} slow request({0}): {1}".format(response_time, name, str(datetime.datetime.now()))
 
 events.request_success += on_request_success
 events.request_failure += on_request_failure
