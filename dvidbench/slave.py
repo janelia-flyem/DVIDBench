@@ -81,7 +81,16 @@ class Slave():
 
     def worker(self):
        while True:
-           url = random.choice(self.config.get('urls'))
+           #url = random.choice(self.config.get('urls'))
+
+           x = random.choice(range(27,85))
+           y = random.choice(range(1540,1694))
+           url = ("http://tem-dvid:8000/api/node/b030517ccbe5417b9766a03133149adc/v9.1.512x512.jpg/tile/xy/1/152_{0}_{1}".format(x, y))
+
+           #x = random.choice(range(29,35))
+           #z = random.choice(range(4398, 4498))
+           #url = ('http://goinac-ws1/data/catmaid-tiles/v9.1-xy/2/{0}/15/{1}.png'.format(z,x))
+
            if self.debug:
                print "requesting url: {}".format(url)
            stats = {}
@@ -103,6 +112,9 @@ class Slave():
                stats['content_size'] = len(response.content)
                stats['status_code'] = response.status_code
                stats['url'] = url
+
+               if self.debug:
+                   print "{1} :{0}".format(stats['url'], stats['duration'])
 
                try:
                    # calling this will throw an error for anything other than a
