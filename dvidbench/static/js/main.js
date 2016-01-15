@@ -1,54 +1,55 @@
 (function($) {
 
-    $(document).ready(function() {
+  $(document).ready(function() {
 
-      // reset stats.
-      $('.reset').on('click', function(){
-        $.get('/stats/reset', function(data) {
-          // do nothing
-        });
+    var resetStats = function() {
+      $.get('/stats/reset', function(data) {
+        timingData = {};
+        plotData = [];
+        setPlotData();
       });
+    }
 
-      $('.add_workers').on('click', function(e) {
-        e.preventDefault();
+    // reset stats.
+    $('.reset').on('click', function(){
+       resetStats();
+    });
 
-        $.post('/start',$('form').serialize(), function(data) {
-          //do nothing for now.
-        });
+    $('.add_workers').on('click', function(e) {
+      e.preventDefault();
+
+      $.post('/start',$('form').serialize(), function(data) {
+        resetStats()
       });
+    });
 
-      $('.stop').on('click', function() {
-        $.get('/stop', function() {});
-      })
-
-      function updatePage() {
-        // ajax call to fetch the data from the server.
-        $.getJSON('/stats/update', function(data) {
-          // update the DOM with the new data.
-          $('.workers').text(data.workers);
-          $('.clients').text(data.clients);
-          for (var stat in data.stats[data.stats.length - 1]) {
-            $('.'+ stat).text(data.stats[data.stats.length -1][stat])
-          }
-        });
-      }
-
-      // start up a timer that loads in the data every three seconds and updates the page.
-      var updaterId = setInterval(updatePage, 3000);
+    $('.stop').on('click', function() {
+      $.get('/stop', function() {});
     })
 
-})(jQuery);
+    function updatePage() {
+      // ajax call to fetch the data from the server.
+      $.getJSON('/stats/update', function(data) {
+        // update the DOM with the new data.
+        $('.workers').text(data.workers);
+        $('.clients').text(data.clients);
+        for (var stat in data.stats[data.stats.length - 1]) {
+          $('.'+ stat).text(data.stats[data.stats.length -1][stat])
+        }
+      });
+    }
 
+    // start up a timer that loads in the data every three seconds and updates the page.
+    var updaterId = setInterval(updatePage, 3000);
+  })
 
-
-
-(function($) {
 
   var loadInterval = 3000;
-  var totalPoints = 100;
+  var totalPoints = 30;
   var timingData = {};
   var plotData = [];
-  var ymax = 10;
+  var ymaxDefault = 100;
+  var ymax = null;
 
   var chartOptions = {
     series: { shadowSize: 1 }, // drawing is faster without shadows
@@ -65,6 +66,7 @@
 
   // convert timing data into something the flot code can understand.
   var setPlotData = function() {
+    ymax = ymaxDefault;
     var setnum = 0;
     for (var dataset in timingData) {
       var yscale = 1;
@@ -88,7 +90,7 @@
             y = 0;
           }
           if (y > ymax) {
-            y = ymax;
+            ymax = y;
           }
 
           plotData[setnum].data.push([x, y]);
