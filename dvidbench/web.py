@@ -48,9 +48,11 @@ def stop_workers():
 @app.route('/stats/timings')
 def get_timings():
     data = {}
+    stats = master.runner.stats.aggregated_stats(name="total", full_request_history=True)
     timings = master.runner.stats.timings
     for t in timings.iterkeys():
         data[t] = timings[t].current_max
+    data['avg'] = stats.avg_response_time
     return json.dumps(data)
 
 @app.route('/stats/update')
