@@ -83,8 +83,7 @@ class RequestStats(object):
         self.num_failures = 0
         for r in self.entries.itervalues():
             r.reset()
-        for r in self.timings.itervalues():
-            r.reset()
+        self.timings = {}
 
     def clear_all(self):
         """
