@@ -5,6 +5,7 @@ import gevent
 import events
 import random
 import time
+import datetime
 import sys
 import requests
 from gevent import GreenletExit
@@ -84,17 +85,30 @@ class Slave():
        while True:
            #url = random.choice(self.config.get('urls'))
 
-           x = random.choice(range(27,85))
-           y = random.choice(range(1540,1694))
-           url = ("http://tem-dvid:8000/api/node/b030517ccbe5417b9766a03133149adc/v9.1.512x512.jpg/tile/xy/1/152_{0}_{1}".format(x, y))
+           #x = random.choice(range(27,85))
+           #y = random.choice(range(1540,1694))
+           #x = 35
+           #y = 1673
+
+           # tem-dvid server
+           url = ("http://10.40.3.163:8000/api/node/b030517ccbe5417b9766a03133149adc/v9.1.512x512.jpg/tile/xy/1/152_{0}_{1}".format(x, y))
+
+           # this is a node server running from ~/work/javascript
+           #url = ("http://tem-dvid:8080/api/node/b030517ccbe5417b9766a03133149adc/v9.1.512x512.jpg/tile/xy/1/152_{0}_{1}".format(x, y))
+
+           # url = "http://tem-dvid:9000/kvautobus/api/keyvalue_range/AQAAAAUDAgABAAAAAQOAAAaJgAAAI4AAAJgAAAAAAAAAAAA=/AQAAAAUDAgABAAAAAQOAAAaJgAAAI4AAAJj___________8=/"
+           # url = "http://tem-dvid:7400/api/node/0c8bc973dba74729880dd1bdfd8d0c5e/grayscale/raw/xy/512_512/7680_5632_4"
 
            #x = random.choice(range(29,35))
            #z = random.choice(range(4398, 4498))
            #url = ('http://goinac-ws1/data/catmaid-tiles/v9.1-xy/2/{0}/15/{1}.png'.format(z,x))
 
-           if self.debug:
-               print "requesting url: {}".format(url)
+           # steve's google url
+           #url = "http://104.197.207.55:8000/api/node/558ccd3f312e4c8d8afce495809c26fb/tiles/tile/xy/0/0_0_0"
+
            stats = {}
+           if self.debug:
+               print "[{0}] requesting url: {1}".format(datetime.datetime.now(), url)
 
            start = time.time()
 
@@ -115,7 +129,7 @@ class Slave():
                stats['url'] = url
 
                if self.debug:
-                   print "{1} :{0}".format(stats['url'], stats['duration'])
+                   print "[{2}] {1} :{0}".format(stats['url'], stats['duration'], datetime.datetime.now())
 
                try:
                    # calling this will throw an error for anything other than a
@@ -145,6 +159,9 @@ class Slave():
                            response_time = stats['duration'],
                            response_length = stats['content_size']
                        )
+
+           if self.debug and int((time.time() - start) * 1000) > 1000:
+               print "[{0}] ****** slow request {1} :{2}".format(datetime.datetime.now(), stats['url'], stats['duration'])
 
            millis = random.randint(self.min_wait, self.max_wait)
            seconds = millis / 1000.0

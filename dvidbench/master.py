@@ -59,7 +59,9 @@ class Master():
 
             elif msg.type == "client-quit":
                 if msg.node_id in self.clients:
+                  print self.stats.aggregated_stats(name="total", full_request_history=True).num_requests
                   del self.clients[msg.node_id]
+
 
             elif msg.type == "client-stats":
                 events.slave_report.fire(client_id=msg.node_id, data=msg.data)
