@@ -25,10 +25,10 @@ else:
 
 runner = None
 
-class Slave(Configurable):
+class Manager(Configurable):
 
     def __init__(self, options):
-        self.slave_id = socket.gethostname() + "_" + str(uuid.uuid1())
+        self.manager_id = socket.gethostname() + "_" + str(uuid.uuid1())
         self.master_host = options.master_host
         self.master_port = options.master_port
         self.client = rpc.Client(self.master_host, self.master_port)
@@ -50,7 +50,7 @@ class Slave(Configurable):
 
     @property
     def identity(self):
-        return self.slave_id
+        return self.manager_id
 
     def listener(self):
         while True:
@@ -166,9 +166,9 @@ class Slave(Configurable):
     def stats_reporter(self):
         while True:
             data = {'workers': self.worker_count}
-            events.report_to_master.fire(client_id=self.slave_id, data=data)
+            events.report_to_master.fire(client_id=self.manager_id, data=data)
             if self.debug:
                 print data
-            self.client.send(Message('client-stats', data, self.slave_id))
+            self.client.send(Message('client-stats', data, self.manager_id))
             gevent.sleep(STATS_REPORT_INTERVAL)
 

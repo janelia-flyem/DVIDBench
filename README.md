@@ -18,7 +18,7 @@ Usage
 
 ```bash
 > dvid-bench --master
-> dvid-bench --slave
+> dvid-bench --manager
 ```
 
 Configuration File

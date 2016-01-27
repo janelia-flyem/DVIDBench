@@ -21,7 +21,6 @@ class Configurable():
                 # import file as a python object
                 imported = __import__(os.path.splitext(configfile)[0])
                 config = imported.DVIDConfig()
-                import ipdb; ipdb.set_trace()
                 return config
 
         # couldn't open the config file

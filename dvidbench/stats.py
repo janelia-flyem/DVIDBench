@@ -493,7 +493,7 @@ def on_report_to_master(client_id, data):
     # clear out the errors.
     global_stats.errors = {}
 
-def on_slave_report(client_id, data):
+def on_manager_report(client_id, data):
     timing_entry = global_stats.get_timings(client_id)
     record_stamp = int(time.time())
 
@@ -522,4 +522,4 @@ events.request_success += on_request_success
 events.request_failure += on_request_failure
 events.request_slow += on_request_slow
 events.report_to_master += on_report_to_master
-events.slave_report += on_slave_report
+events.manager_report += on_manager_report

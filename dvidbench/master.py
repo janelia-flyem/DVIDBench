@@ -25,10 +25,10 @@ class Master(Configurable):
 
         self.stats = global_stats
 
-        def on_slave_report(client_id, data):
+        def on_manager_report(client_id, data):
             self.clients[client_id]['workers'] = data['workers']
             return
-        events.slave_report += on_slave_report
+        events.manager_report += on_manager_report
 
         return
 
@@ -62,7 +62,7 @@ class Master(Configurable):
 
 
             elif msg.type == "client-stats":
-                events.slave_report.fire(client_id=msg.node_id, data=msg.data)
+                events.manager_report.fire(client_id=msg.node_id, data=msg.data)
 
     def quit(self):
         for client in self.clients:

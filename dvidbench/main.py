@@ -8,7 +8,7 @@ import json
 import sys
 import events
 import master
-import slave
+import manager
 
 def parse_command_arguments():
     parser = argparse.ArgumentParser(description='Benchmark a DVID server')
@@ -18,11 +18,11 @@ def parse_command_arguments():
     parser.add_argument('config_file', help='location of the configuration file', nargs='?', default=os.path.expanduser('~/dvidbenchrc.py'))
 
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--slave',  help='set this process to run as a slave worker', action='store_true')
+    group.add_argument('--manager',  help='set this process to run as a manager worker', action='store_true')
     group.add_argument('--master',  help='set this process to run as the aggregating master', action='store_true')
 
-    parser.add_argument('--master-host',  help='specify the address of the master this slave should report to', action='store', dest='master_host', default='127.0.0.1')
-    parser.add_argument('--master-port',  help='specify the port of the master this slave should report to', action='store', dest='master_port', default=5050)
+    parser.add_argument('--master-host',  help='specify the address of the master this manager should report to', action='store', dest='master_host', default='127.0.0.1')
+    parser.add_argument('--master-port',  help='specify the port of the master this manager should report to', action='store', dest='master_port', default=5050)
     parser.add_argument('--console-host',  help='specify the ip address the master console should be attached to', action='store', dest='console_host', default='')
     parser.add_argument('--console-port',  help='specify the port the master console should be attached to', action='store', dest='console_port', default=8889)
 
@@ -31,8 +31,8 @@ def parse_command_arguments():
 def main():
     # parse command line arguments
     args = parse_command_arguments()
-    if args.slave:
-        greenlet = as_slave(args)
+    if args.manager:
+        greenlet = as_manager(args)
     else:
         greenlet = as_master(args)
 
@@ -76,21 +76,21 @@ def as_master(args):
 
 
 
-def as_slave(args):
-    print "running as slave"
+def as_manager(args):
+    print "running as manager"
     # start up rpc client
-    slave.runner = slave.Slave(args)
+    manager.runner = manager.Manager(args)
 
     # signal ready state to master
     # receive configuration and store
     # wait for run command
-    main_greenlet = gevent.spawn(slave.runner.listener)
+    main_greenlet = gevent.spawn(manager.runner.listener)
     # run requests until receive stop command
     # report stats
     # shutdown if requested
     def on_quit():
         print "terminating client"
-        slave.runner.quit()
+        manager.runner.quit()
     events.quitting += on_quit
     return main_greenlet
 
