@@ -1,23 +1,23 @@
 import gevent
 import json
-import sys
 import events
 from gevent import GreenletExit
 from gevent.pool import Group
 import rpc
 from rpc import Message
 from stats import global_stats
+from config import Configurable
 
 runner = None # singleton so that we only have one master runner.
 
-class Master():
+class Master(Configurable):
 
     def __init__(self, options):
         self.clients = {}
         self.master_host = options.master_host
         self.master_port = options.master_port
 
-        self.load_config_data(options)
+        self.config = self.load_config_data(options)
 
         self.server = rpc.Server(self.master_host, self.master_port)
         self.greenlet = Group()
@@ -50,8 +50,6 @@ class Master():
                 print "Received contact from client {}".format(msg.node_id)
                 self.clients[msg.node_id] = {'workers': 0}
                 print "currently serving {} clients".format(len(self.clients))
-                for client in self.clients.iterkeys():
-                    self.server.send(Message('config', self.config, client))
 
             elif msg.type == "client-ready":
                 # set clients status as ready
@@ -69,24 +67,6 @@ class Master():
     def quit(self):
         for client in self.clients:
             self.server.send(Message("quit",None,None))
-
-    def load_config_data(self, args):
-        if args.debug:
-            sys.stderr.write("looking for settings in %s\n" % args.config_file)
-
-        self.config_file = args.config_file
-
-        try:
-            config_json = open(args.config_file)
-            config = json.load(config_json)
-            self.config = config
-        except IOError:
-            print "unable to find the config file: %s\n" % args.config_file
-            exit(1)
-        except ValueError:
-            print "There was a problem reading the config. Is it valid JSON?\n"
-            exit(1)
-        return
 
     def start_workers(self, count):
         # divide the count among the workers

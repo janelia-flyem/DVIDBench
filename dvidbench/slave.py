@@ -13,6 +13,7 @@ from gevent.pool import Group
 from rpc import Message
 from stats import global_stats
 from requests.exceptions import (RequestException, MissingSchema, InvalidSchema, InvalidURL)
+from config import Configurable
 
 STATS_REPORT_INTERVAL = 3
 SLOW_REQUEST_THRESHOLD = 1000 #ms
@@ -24,14 +25,14 @@ else:
 
 runner = None
 
-class Slave():
+class Slave(Configurable):
 
     def __init__(self, options):
         self.slave_id = socket.gethostname() + "_" + str(uuid.uuid1())
         self.master_host = options.master_host
         self.master_port = options.master_port
         self.client = rpc.Client(self.master_host, self.master_port)
-        self.config = None
+        self.config = self.load_config_data(options)
         self.workers = Group()
         self.session = requests.Session()
         self.min_wait = 1000
@@ -54,11 +55,7 @@ class Slave():
     def listener(self):
         while True:
             msg = self.client.recv()
-            if msg.type == 'config':
-                print "got configuration from master"
-                self.config = msg.data
-
-            elif msg.type == 'quit':
+            if msg.type == 'quit':
                 print "shutting down client: {}".format(self.identity)
                 self.quit()
 
@@ -83,28 +80,8 @@ class Slave():
 
     def worker(self):
        while True:
-           #url = random.choice(self.config.get('urls'))
+           url = self.config.url()
 
-           #x = random.choice(range(27,85))
-           #y = random.choice(range(1540,1694))
-           #x = 35
-           #y = 1673
-
-           # tem-dvid server
-           url = ("http://10.40.3.163:8000/api/node/b030517ccbe5417b9766a03133149adc/v9.1.512x512.jpg/tile/xy/1/152_{0}_{1}".format(x, y))
-
-           # this is a node server running from ~/work/javascript
-           #url = ("http://tem-dvid:8080/api/node/b030517ccbe5417b9766a03133149adc/v9.1.512x512.jpg/tile/xy/1/152_{0}_{1}".format(x, y))
-
-           # url = "http://tem-dvid:9000/kvautobus/api/keyvalue_range/AQAAAAUDAgABAAAAAQOAAAaJgAAAI4AAAJgAAAAAAAAAAAA=/AQAAAAUDAgABAAAAAQOAAAaJgAAAI4AAAJj___________8=/"
-           # url = "http://tem-dvid:7400/api/node/0c8bc973dba74729880dd1bdfd8d0c5e/grayscale/raw/xy/512_512/7680_5632_4"
-
-           #x = random.choice(range(29,35))
-           #z = random.choice(range(4398, 4498))
-           #url = ('http://goinac-ws1/data/catmaid-tiles/v9.1-xy/2/{0}/15/{1}.png'.format(z,x))
-
-           # steve's google url
-           #url = "http://104.197.207.55:8000/api/node/558ccd3f312e4c8d8afce495809c26fb/tiles/tile/xy/0/0_0_0"
 
            stats = {}
            if self.debug:

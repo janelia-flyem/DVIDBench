@@ -15,7 +15,7 @@ def parse_command_arguments():
     parser.add_argument('-v', '--version', action="version", version=dvidbench.__version__ )
     parser.add_argument('-d', '--debug',  help='print extra debugging information', action='store_true')
 
-    parser.add_argument('config_file', help='location of the configuration file', nargs='?', default=os.path.expanduser('~/.dvidbenchrc'))
+    parser.add_argument('config_file', help='location of the configuration file', nargs='?', default=os.path.expanduser('~/dvidbenchrc.py'))
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--slave',  help='set this process to run as a slave worker', action='store_true')
