@@ -19,7 +19,7 @@ class Master(Configurable):
 
         self.config = self.load_config_data(options)
 
-        self.server = rpc.Server(self.master_host, self.master_port)
+        self.server = rpc.Server('*', self.master_port)
         self.greenlet = Group()
         self.greenlet.spawn(self.listener)
 
