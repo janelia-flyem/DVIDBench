@@ -71,8 +71,7 @@ class Manager(Configurable):
 
     def quit(self):
         # close down all the workers
-        print "closing down workers"
-        self.workers.kill(block=True)
+        self.stop_workers(0)
         # message back to master?
         self.client.send(Message('client-quit', "i'm a gonner", self.identity))
         # exit
@@ -160,6 +159,7 @@ class Manager(Configurable):
     def stop_workers(self,count):
         self.workers.kill(block=True)
         self.worker_count = 0
+        print "stopped all workers"
         return
 
 
