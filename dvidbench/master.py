@@ -1,6 +1,9 @@
 import gevent
 import json
 import events
+import logging
+import time
+import os
 from gevent import GreenletExit
 from gevent.pool import Group
 import rpc
@@ -27,8 +30,32 @@ class Master(Configurable):
 
         def on_manager_report(client_id, data):
             self.clients[client_id]['workers'] = data['workers']
+
             return
         events.manager_report += on_manager_report
+
+        if self.config.log_stats_dir:
+            log_dir = os.path.expanduser(self.config.log_stats_dir)
+            try:
+                os.makedirs(log_dir)
+            except OSError:
+                if not os.path.isdir(log_dir):
+                    print "Couldn't create dir {0}: 1{}".format(log_dir, e)
+                    exit(1)
+
+            # create logger
+            timestr = time.strftime("%Y%m%d-%H%M%S")
+            log_file = os.path.join(log_dir, '{0}-data.log'.format(timestr))
+
+            log_format ='%(message)s'
+            logging.basicConfig(format=log_format, filename=log_file, level=logging.DEBUG )
+
+            def log_on_manager_report(client_id, data):
+                for stat in data['stats']:
+                    logging.info( "%(start_time)s\t%(name)s\t%(max_response_time)s\t%(min_response_time)s\t%(total_content_length)s", stat)
+                return
+            events.manager_report += log_on_manager_report
+
 
         return
 
