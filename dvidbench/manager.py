@@ -78,6 +78,11 @@ class Manager(Configurable):
         exit(0)
 
     def worker(self):
+       verify = True
+
+       if hasattr(self.config, 'verifySSL'):
+           verify = self.config.verifySSL
+
        while True:
            url = self.config.url()
 
@@ -89,7 +94,7 @@ class Manager(Configurable):
            start = time.time()
 
            try:
-               response = self.session.get(url)
+               response = self.session.get(url, verify=verify)
            #capture connection errors when the remote is down.
            except RequestException as e:
                events.request_failure.fire(
