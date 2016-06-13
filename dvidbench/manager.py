@@ -78,74 +78,83 @@ class Manager(Configurable):
         exit(0)
 
     def worker(self):
-       verify = True
+        verify = True
 
-       if hasattr(self.config, 'verifySSL'):
-           verify = self.config.verifySSL
+        if hasattr(self.config, 'verifySSL'):
+            verify = self.config.verifySSL
 
-       while True:
-           url = self.config.url()
+        payload = None
 
+        request = self.config.request()
+        if request.get('method').lower() == 'post' and request.get('payload'):
+            payload = open(request.get('payload', 'rb')).read()
 
-           stats = {}
-           if self.debug:
-               print "[{0}] requesting url: {1}".format(datetime.datetime.now(), url)
+        while True:
+            url = self.config.request().get('url')
 
-           start = time.time()
+            stats = {}
+            if self.debug:
+                print "[{0}] requesting url: {1}".format(datetime.datetime.now(), url)
 
-           try:
-               response = self.session.get(url, verify=verify)
-           #capture connection errors when the remote is down.
-           except RequestException as e:
-               events.request_failure.fire(
-                   request_type = 'GET',
-                   name = url,
-                   response_time = 0,
-                   exception = e
-               )
-           else:
-               stats['duration'] = int((time.time() - start) * 1000)
-               stats['content_size'] = len(response.content)
-               stats['status_code'] = response.status_code
-               stats['url'] = url
+            start = time.time()
 
-               if self.debug:
-                   print "[{2}] {1} :{0}".format(stats['url'], stats['duration'], datetime.datetime.now())
+            try:
+                if request.get('method').lower() == 'post':
+                    response = self.session.post(url, data=payload, verify=verify)
+                else:
+                    response = self.session.get(url, verify=verify)
 
-               try:
-                   # calling this will throw an error for anything other than a
-                   # successful response.
-                   response.raise_for_status()
-               except (MissingSchema, InvalidSchema, InvalidURL):
-                   raise
-               except RequestException as e:
-                   events.request_failure.fire(
-                       request_type = 'GET',
-                       name = url,
-                       response_time = stats['duration'],
-                       exception = e
-                   )
-               else:
-                   events.request_success.fire(
-                       request_type = 'GET',
-                       name = url,
-                       response_time = stats['duration'],
-                       response_length = stats['content_size']
-                   )
+            #capture connection errors when the remote is down.
+            except RequestException as e:
+                events.request_failure.fire(
+                    request_type = 'GET',
+                    name = url,
+                    response_time = 0,
+                    exception = e
+                )
+            else:
+                stats['duration'] = int((time.time() - start) * 1000)
+                stats['content_size'] = len(response.content)
+                stats['status_code'] = response.status_code
+                stats['url'] = url
 
-                   if stats['duration'] > SLOW_REQUEST_THRESHOLD:
-                       events.request_slow.fire (
-                           name = url,
-                           response_time = stats['duration'],
-                           response_length = stats['content_size']
-                       )
+                if self.debug:
+                    print "[{2}] {1} :{0}".format(stats['url'], stats['duration'], datetime.datetime.now())
 
-           if self.debug and int((time.time() - start) * 1000) > SLOW_REQUEST_THRESHOLD:
-               print "[{0}] ****** slow request {1} :{2}".format(datetime.datetime.now(), stats['url'], stats['duration'])
+                try:
+                    # calling this will throw an error for anything other than a
+                    # successful response.
+                    response.raise_for_status()
+                except (MissingSchema, InvalidSchema, InvalidURL):
+                    raise
+                except RequestException as e:
+                    events.request_failure.fire(
+                        request_type = 'GET',
+                        name = url,
+                        response_time = stats['duration'],
+                        exception = e
+                    )
+                else:
+                    events.request_success.fire(
+                        request_type = request.get('method').upper(),
+                        name = url,
+                        response_time = stats['duration'],
+                        response_length = stats['content_size']
+                    )
 
-           millis = random.randint(self.min_wait, self.max_wait)
-           seconds = millis / 1000.0
-           gevent.sleep(seconds)
+                    if stats['duration'] > SLOW_REQUEST_THRESHOLD:
+                        events.request_slow.fire (
+                            name = url,
+                            response_time = stats['duration'],
+                            response_length = stats['content_size']
+                        )
+
+            if self.debug and int((time.time() - start) * 1000) > SLOW_REQUEST_THRESHOLD:
+                print "[{0}] ****** slow request {1} :{2}".format(datetime.datetime.now(), stats['url'], stats['duration'])
+
+            millis = random.randint(self.min_wait, self.max_wait)
+            seconds = millis / 1000.0
+            gevent.sleep(seconds)
 
     def start_workers(self, count):
         # put random sleep in here, so that all workers aren't started at exactly the
